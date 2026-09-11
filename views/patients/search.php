@@ -129,17 +129,7 @@ use App\Helpers\DateHelper;
               </tr>
             </thead>
             <tbody>
-              <?php if (empty($results)): ?>
-                <tr>
-                  <td colspan="8" class="text-center py-5">
-                    <div class="text-muted">
-                      <i class="fa-solid fa-user-slash fs-1 d-block mb-3 opacity-50"></i>
-                      <h5>ไม่พบข้อมูลผู้ป่วยที่ตรงตามเงื่อนไขการค้นหา</h5>
-                      <p class="fs-7 mb-0">ลองพิมพ์ HN, CID หรือปรับเงื่อนไขตัวกรองใหม่เพื่อค้นหาอีกครั้ง</p>
-                    </div>
-                  </td>
-                </tr>
-              <?php else: ?>
+              <?php if (!empty($results)): ?>
                 <?php foreach ($results as $p): ?>
                   <tr>
                     <td>

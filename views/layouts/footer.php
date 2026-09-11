@@ -19,11 +19,23 @@ $baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
 <script>
 $(document).ready(function() {
   if ($.fn.DataTable) {
-    $('.datatable').DataTable({
-      language: {
-        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/th.json'
-      },
-      pageLength: 25
+    $('.datatable').each(function() {
+      var $table = $(this);
+      // Remove manual colspan rows inside tbody that break DataTables cell indexing
+      $table.find('tbody tr').each(function() {
+        if ($(this).children('td[colspan]').length > 0) {
+          $(this).remove();
+        }
+      });
+
+      $table.DataTable({
+        language: {
+          url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/th.json'
+        },
+        pageLength: 25,
+        autoWidth: false,
+        retrieve: true
+      });
     });
   }
 });
