@@ -20,6 +20,9 @@ spl_autoload_register(function ($class) {
 });
 
 // 2. Initialize App Config & Environment
+if (file_exists(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+}
 \App\Config\AppConfig::load();
 date_default_timezone_set(\App\Config\AppConfig::get('TIMEZONE', 'Asia/Bangkok'));
 
