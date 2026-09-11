@@ -97,6 +97,18 @@ assertTest("System Clinics Master Retrieval", is_array($clinics) && count($clini
 $activeClinicNames = \App\Services\SystemSettingService::getActiveClinicNames();
 assertTest("Active Clinic Names Extraction", is_array($activeClinicNames) && count($activeClinicNames) > 0);
 
+// 13. Clinical Lab Alert Evaluator - Hyperglycemia Test
+$dmLabAlerts = \App\Services\SmartAlertService::evaluateLabAlerts(['fbs' => 185.0, 'hba1c' => 8.2]);
+assertTest("Clinical Lab Alert Evaluator (High FBS & HbA1c)", count($dmLabAlerts) >= 2);
+
+// 14. Clinical Lab Alert Evaluator - Dyslipidemia Test
+$lipidLabAlerts = \App\Services\SmartAlertService::evaluateLabAlerts(['cholesterol' => 250.0, 'triglyceride' => 320.0, 'ldl' => 145.0]);
+assertTest("Clinical Lab Alert Evaluator (High Lipids)", count($lipidLabAlerts) === 3);
+
+// 15. Clinical Lab Alert Evaluator - Hypoalbuminemia & Renal Risk Test
+$renLabAlerts = \App\Services\SmartAlertService::evaluateLabAlerts(['albumin' => 2.4, 'egfr' => 45.0]);
+assertTest("Clinical Lab Alert Evaluator (Low Albumin & eGFR Risk)", count($renLabAlerts) === 2);
+
 echo "\n========================================================\n";
 echo "TEST RESULTS SUMMARY:\n";
 echo "PASSED: {$passCount} | FAILED: {$failCount}\n";

@@ -169,6 +169,7 @@ class PatientController {
         // 2. Labs
         $labRes = $api->getLatestLabs($hn);
         $latestLabs = $labRes['data'] ?? [];
+        $labAlerts = \App\Services\SmartAlertService::evaluateLabAlerts($latestLabs, $patient);
 
         // 3. Allergies
         $allergyRes = $api->getAllergies($hn);

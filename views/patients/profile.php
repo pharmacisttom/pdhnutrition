@@ -77,6 +77,38 @@ $egfr = round(141 * pow(min(($cr / ($isFemale ? 0.7 : 0.9)), 1), ($isFemale ? -0
       </div>
     <?php endif; ?>
 
+    <!-- Dynamic Clinical Nutrition Lab Risk Alerts (High FBS, High HbA1c, Dyslipidemia, Hypoalbuminemia, Renal Risk) -->
+    <?php if (!empty($labAlerts)): ?>
+      <div class="card border-0 shadow-sm mb-4 bg-white border-start border-danger border-5">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold text-danger mb-0">
+            <i class="fa-solid fa-flask-vial me-2 fs-4"></i> 🚨 แจ้งเตือนผลตรวจ LAB ผิดปกติทางโภชนาการ (Clinical Nutrition Lab Alerts)
+          </h5>
+          <span class="badge bg-danger rounded-pill fs-6"><?= count($labAlerts) ?> ภาวะผิดปกติที่ตรวจพบ</span>
+        </div>
+        <div class="card-body p-3">
+          <div class="row g-3">
+            <?php foreach ($labAlerts as $lAlert): ?>
+              <div class="col-md-6">
+                <div class="p-3 rounded border h-100 bg-white shadow-sm border-start border-4 <?= ($lAlert['level'] === 'CRITICAL') ? 'border-danger' : 'border-warning' ?>">
+                  <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="badge <?= $lAlert['badge_class'] ?> fs-6 fw-bold px-2 py-1">
+                      <?= htmlspecialchars($lAlert['title']) ?>
+                    </span>
+                    <span class="badge <?= ($lAlert['level'] === 'CRITICAL') ? 'bg-danger text-white' : 'bg-warning text-dark' ?> ms-2"><?= htmlspecialchars($lAlert['level']) ?></span>
+                  </div>
+                  <div class="fw-bold text-pdh-blue fs-6 mt-2"><?= htmlspecialchars($lAlert['msg']) ?></div>
+                  <div class="text-muted fs-7 mt-2 pt-2 border-top">
+                    <i class="fa-solid fa-user-nurse text-success me-1"></i> <strong>แนวทางโภชนบำบัด:</strong> <?= htmlspecialchars($lAlert['action_th']) ?>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+    <?php endif; ?>
+
     <!-- Clinical Alerts & Drug-Lab Interaction Warnings -->
     <div class="row g-3 mb-4">
       <?php if ($albumin > 0 && $albumin < 3.0): ?>
