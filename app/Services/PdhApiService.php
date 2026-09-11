@@ -13,7 +13,7 @@ class PdhApiService {
     private int $timeout;
 
     public function __construct() {
-        $this->driver  = AppConfig::get('HIS_DRIVER', 'mock');
+        $this->driver  = AppConfig::get('HIS_DRIVER', 'himpro');
         $this->baseUrl = rtrim(AppConfig::get('PDH_API_BASE_URL', 'http://192.168.111.240/pdhapi'), '/');
         $this->apiKey  = AppConfig::get('PDH_API_KEY', '');
         $this->timeout = (int)AppConfig::get('PDH_API_TIMEOUT', 10);
@@ -76,43 +76,52 @@ class PdhApiService {
     }
 
     public function getAppointments(string $hn): array {
-        return [
-            'success' => true,
-            'source' => $this->driver === 'mock' ? 'MOCK' : 'HIS',
-            'data' => [
-                ['appointment_date' => date('Y-m-d', strtotime('+14 days')), 'clinic' => 'คลินิกโภชนาการ', 'doctor' => 'นพ. สมชาย ใจดี', 'reason' => 'Follow-up NAF Assessment']
-            ]
-        ];
-    }
-
-    public function getMedications(string $hn): array {
-        return [
-            'success' => true,
-            'source' => $this->driver === 'mock' ? 'MOCK' : 'HIS',
-            'data' => [
-                ['med_name' => 'Metformin 500 mg', 'usage' => '1x2 pc', 'qty' => 60],
-                ['med_name' => 'Enalapril 5 mg', 'usage' => '1x1 pc', 'qty' => 30]
-            ]
-        ];
-    }
-
-    public function getAllergies(string $hn): array {
-        if ($hn === '66000103') {
+        if ($this->driver === 'mock') {
             return [
                 'success' => true,
-                'has_allergy' => true,
-                'source' => 'HIS',
+                'source' => 'MOCK',
                 'data' => [
-                    ['allergy_item' => 'Penicillin', 'symptom' => 'Rash & Urticaria', 'severity' => 'MODERATE']
+                    ['appointment_date' => date('Y-m-d', strtotime('+14 days')), 'clinic' => 'คลินิกโภชนาการ', 'doctor' => 'นพ. สมชาย ใจดี', 'reason' => 'Follow-up NAF Assessment']
                 ]
             ];
         }
-        return [
-            'success' => true,
-            'has_allergy' => false,
-            'source' => 'HIS',
-            'data' => []
-        ];
+        return $this->fetchFromGateway("/appointment/{$hn}", 'patients_cache', 'hn', $hn);
+    }
+
+    public function getMedications(string $hn): array {
+        if ($this->driver === 'mock') {
+            return [
+                'success' => true,
+                'source' => 'MOCK',
+                'data' => [
+                    ['med_name' => 'Metformin 500 mg', 'usage' => '1x2 pc', 'qty' => 60],
+                    ['med_name' => 'Enalapril 5 mg', 'usage' => '1x1 pc', 'qty' => 30]
+                ]
+            ];
+        }
+        return $this->fetchFromGateway("/medications/{$hn}", 'patients_cache', 'hn', $hn);
+    }
+
+    public function getAllergies(string $hn): array {
+        if ($this->driver === 'mock') {
+            if ($hn === '66000103') {
+                return [
+                    'success' => true,
+                    'has_allergy' => true,
+                    'source' => 'HIS',
+                    'data' => [
+                        ['allergy_item' => 'Penicillin', 'symptom' => 'Rash & Urticaria', 'severity' => 'MODERATE']
+                    ]
+                ];
+            }
+            return [
+                'success' => true,
+                'has_allergy' => false,
+                'source' => 'HIS',
+                'data' => []
+            ];
+        }
+        return $this->fetchFromGateway("/allergy/{$hn}", 'patients_cache', 'hn', $hn);
     }
 
     // ==========================================
@@ -138,13 +147,14 @@ class PdhApiService {
         if ($httpCode === 200 && !empty($response)) {
             $json = json_decode($response, true);
             if (is_array($json)) {
-                $this->updateLocalCache($cacheTable, $json);
+                $payload = $json['data'] ?? $json;
+                $this->updateLocalCache($cacheTable, $payload);
                 return [
                     'success' => true,
                     'is_cached' => false,
-                    'source' => 'PDH API Gateway (HIMPRO)',
+                    'source' => 'PDH API Gateway (HIMPRO Live)',
                     'last_sync' => date('Y-m-d H:i:s'),
-                    'data' => $json['data'] ?? $json
+                    'data' => $payload
                 ];
             }
         }
@@ -187,7 +197,39 @@ class PdhApiService {
     }
 
     private function updateLocalCache(string $table, array $payload): void {
-        // Optional sync logic to update local DB table
+        try {
+            $pdo = Database::getConnection();
+            if ($table === 'patients_cache' && isset($payload['hn'])) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO patients_cache (hn, cid, prefix, first_name, last_name, fullname, gender, birthdate, age, weight, height, bmi, synced_at)
+                    VALUES (:hn, :cid, :prefix, :fname, :lname, :fullname, :gender, :bdate, :age, :w, :h, :bmi, NOW())
+                    ON DUPLICATE KEY UPDATE 
+                        fullname = VALUES(fullname), weight = VALUES(weight), height = VALUES(height), bmi = VALUES(bmi), synced_at = NOW()
+                ");
+                $fname = $payload['first_name'] ?? $payload['fname'] ?? '';
+                $lname = $payload['last_name'] ?? $payload['lname'] ?? '';
+                $prefix = $payload['prefix'] ?? $payload['pname'] ?? '';
+                $fullname = $payload['fullname'] ?? trim("{$prefix} {$fname} {$lname}");
+
+                $stmt->execute([
+                    'hn'       => $payload['hn'],
+                    'cid'      => $payload['cid'] ?? $payload['idcard'] ?? null,
+                    'prefix'   => $prefix,
+                    'fname'    => $fname,
+                    'lname'    => $lname,
+                    'fullname' => $fullname,
+                    'gender'   => strtoupper($payload['gender'] ?? 'MALE'),
+                    'bdate'    => $payload['birthdate'] ?? null,
+                    'age'      => (int)($payload['age'] ?? 0),
+                    'w'        => (float)($payload['weight'] ?? 0),
+                    'h'        => (float)($payload['height'] ?? 0),
+                    'bmi'      => (float)($payload['bmi'] ?? 0)
+                ]);
+            }
+        } catch (Exception $e) {
+            // Log cache error silently
+            error_log("updateLocalCache Error: " . $e->getMessage());
+        }
     }
 
     // ==========================================
@@ -210,7 +252,6 @@ class PdhApiService {
             ];
         }
 
-        // Generate synthetic mock patient if not in DB
         return [
             'success' => true,
             'is_cached' => false,
@@ -336,7 +377,6 @@ class PdhApiService {
         $stmt->execute(['hn' => $hn]);
         $labs = $stmt->fetchAll();
 
-        // Calculate TLC if WBC & Lymphocyte exist
         $wbc = null;
         $lym = null;
         $alb = null;

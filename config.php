@@ -32,7 +32,7 @@ if (strpos($serverHost, '192.168.111.240') !== false || $serverIp === '192.168.1
     defined('DB_NAME') || define('DB_NAME', 'pdhnutrition_dev');
     defined('DB_USER') || define('DB_USER', 'root');
     defined('DB_PASS') || define('DB_PASS', '');
-    defined('HIS_DRIVER') || define('HIS_DRIVER', 'mock');
+    defined('HIS_DRIVER') || define('HIS_DRIVER', 'himpro');
 }
 
 // PDH API Gateway Config
