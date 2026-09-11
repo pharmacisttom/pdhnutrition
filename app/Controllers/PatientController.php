@@ -12,27 +12,105 @@ use PDO;
 class PatientController {
     public function search(): void {
         AuthMiddleware::check();
-        $query = SanitizerHelper::escape($_GET['q'] ?? '');
-        $results = [];
+        $query       = SanitizerHelper::escape($_GET['q'] ?? '');
+        $typeFilter  = SanitizerHelper::escape($_GET['type'] ?? 'ALL');
+        $nafFilter   = SanitizerHelper::escape($_GET['naf'] ?? 'ALL');
+        $labFilter   = SanitizerHelper::escape($_GET['lab'] ?? 'ALL');
+        $results     = [];
+
+        $api = new PdhApiService();
+        $pdo = Database::getConnection();
+
+        // 1. If keyword search is entered, sync matching live patients from HIMPRO Gateway
+        if (!empty($query)) {
+            $gatewayRes = $api->fetchFromGateway("/v1/patients/search?q=" . urlencode($query), 'patients_cache');
+            if (!empty($gatewayRes['data']) && is_array($gatewayRes['data'])) {
+                $stmtP = $pdo->prepare("
+                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, phone, synced_at)
+                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :phone, NOW())
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), synced_at = NOW()
+                ");
+                foreach ($gatewayRes['data'] as $gp) {
+                    if (empty($gp['hn'])) continue;
+                    $gender = ($gp['sex_label'] ?? $gp['gender'] ?? '') === 'หญิง' ? 'หญิง' : 'ชาย';
+                    $bdate  = $gp['birth_date'] ?? null;
+                    $age    = 0;
+                    if (!empty($bdate) && $bdate !== '0000-00-00') {
+                        $age = date_diff(date_create($bdate), date_create('today'))->y;
+                    }
+                    $stmtP->execute([
+                        'hn'       => $gp['hn'],
+                        'cid'      => $gp['cid'] ?? null,
+                        'fullname' => $gp['fullname'] ?? ($gp['first_name'] . ' ' . $gp['last_name']),
+                        'gender'   => $gender,
+                        'bdate'    => $bdate,
+                        'age'      => $age,
+                        'phone'    => $gp['phone'] ?? null
+                    ]);
+                }
+            }
+        }
+
+        // 2. Build dynamic multi-criteria filter query
+        $sql = "
+            SELECT p.*, 
+                   n.naf_grade as last_naf_grade, n.assessment_date as last_naf_date, n.total_score as last_naf_score,
+                   v.clinic as last_clinic, v.visit_date as last_visit_date,
+                   r.risk_level as registry_risk
+            FROM patients_cache p
+            LEFT JOIN (
+                SELECT hn, naf_grade, assessment_date, total_score,
+                       ROW_NUMBER() OVER (PARTITION BY hn ORDER BY assessment_date DESC, id DESC) as rn
+                FROM naf_assessments
+            ) n ON p.hn = n.hn AND n.rn = 1
+            LEFT JOIN (
+                SELECT hn, clinic, visit_date,
+                       ROW_NUMBER() OVER (PARTITION BY hn ORDER BY visit_date DESC, id DESC) as rn
+                FROM visits_cache
+            ) v ON p.hn = v.hn AND v.rn = 1
+            LEFT JOIN nutrition_registry r ON p.hn = r.hn AND r.active = 1
+            WHERE 1=1
+        ";
+        $params = [];
 
         if (!empty($query)) {
-            $pdo = Database::getConnection();
-            $stmt = $pdo->prepare("
-                SELECT p.*, n.naf_grade as last_naf_grade, n.assessment_date as last_naf_date
-                FROM patients_cache p
-                LEFT JOIN (
-                    SELECT hn, naf_grade, assessment_date,
-                           ROW_NUMBER() OVER (PARTITION BY hn ORDER BY assessment_date DESC, id DESC) as rn
-                    FROM naf_assessments
-                ) n ON p.hn = n.hn AND n.rn = 1
-                WHERE p.hn LIKE :q OR p.cid LIKE :q OR p.fullname LIKE :q
-                LIMIT 30
-            ");
-            $stmt->execute(['q' => "%{$query}%"]);
-            $results = $stmt->fetchAll();
-
-            AuditService::log('SEARCH_PATIENT', 'PATIENTS', null, null, null, null, ['query' => $query]);
+            $sql .= " AND (p.hn LIKE :q OR p.cid LIKE :q OR p.fullname LIKE :q OR v.clinic LIKE :q)";
+            $params['q'] = "%{$query}%";
         }
+
+        if ($typeFilter === 'OPD') {
+            $sql .= " AND v.clinic IS NOT NULL";
+        } elseif ($typeFilter === 'IPD') {
+            $sql .= " AND v.clinic LIKE '%IPD%'";
+        } elseif ($typeFilter === 'REGISTRY') {
+            $sql .= " AND r.risk_level IS NOT NULL";
+        }
+
+        if ($nafFilter === 'NAF A') {
+            $sql .= " AND n.naf_grade = 'NAF A'";
+        } elseif ($nafFilter === 'NAF B') {
+            $sql .= " AND n.naf_grade = 'NAF B'";
+        } elseif ($nafFilter === 'NAF C') {
+            $sql .= " AND n.naf_grade = 'NAF C'";
+        } elseif ($nafFilter === 'UNASSESSED') {
+            $sql .= " AND n.naf_grade IS NULL";
+        }
+
+        if ($labFilter === 'LOW_BMI') {
+            $sql .= " AND p.bmi > 0 AND p.bmi < 18.5";
+        }
+
+        $sql .= " ORDER BY p.synced_at DESC, p.id DESC LIMIT 50";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $results = $stmt->fetchAll();
+
+        AuditService::log('SEARCH_PATIENT', 'PATIENTS', null, null, null, null, [
+            'query' => $query,
+            'type'  => $typeFilter,
+            'naf'   => $nafFilter,
+            'lab'   => $labFilter
+        ]);
 
         require __DIR__ . '/../../views/patients/search.php';
     }
