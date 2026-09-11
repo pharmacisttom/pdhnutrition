@@ -65,7 +65,7 @@ class PatientController {
             ) n ON p.hn = n.hn AND n.rn = 1
             LEFT JOIN (
                 SELECT hn, clinic, visit_date,
-                       ROW_NUMBER() OVER (PARTITION BY hn ORDER BY visit_date DESC, id DESC) as rn
+                       ROW_NUMBER() OVER (PARTITION BY hn ORDER BY visit_date DESC, vn DESC) as rn
                 FROM visits_cache
             ) v ON p.hn = v.hn AND v.rn = 1
             LEFT JOIN nutrition_registry r ON p.hn = r.hn AND r.active = 1
