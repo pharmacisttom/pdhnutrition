@@ -100,7 +100,7 @@ class PatientController {
             $sql .= " AND p.bmi > 0 AND p.bmi < 18.5";
         }
 
-        $sql .= " ORDER BY p.synced_at DESC, p.id DESC LIMIT 50";
+        $sql .= " ORDER BY p.synced_at DESC, p.hn DESC LIMIT 50";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $results = $stmt->fetchAll();
