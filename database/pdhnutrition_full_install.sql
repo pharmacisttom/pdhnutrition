@@ -1,5 +1,6 @@
 -- ========================================================
 -- PDH Nutrition System - Complete Installation SQL for Server 240
+-- Compatible with MySQL users without REFERENCES privilege
 -- Database: pdhnutrition
 -- Pluakdaeng Hospital Clinical Nutrition Management System
 -- ========================================================
@@ -40,7 +41,7 @@ CREATE TABLE `user_roles` (
   `user_id` INT NOT NULL,
   `role_id` INT NOT NULL,
   PRIMARY KEY (`user_id`, `role_id`),
-  CONSTRAINT `fk_ur_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  INDEX `idx_ur_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Patients Cache
@@ -240,7 +241,6 @@ CREATE TABLE `naf_answers` (
   `item_code` VARCHAR(50) NOT NULL,
   `score_given` INT NOT NULL DEFAULT 0,
   `user_confirmed_diagnosis` TINYINT(1) DEFAULT 0,
-  CONSTRAINT `fk_na_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `naf_assessments` (`id`) ON DELETE CASCADE,
   INDEX `idx_na_ass_id` (`assessment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -294,7 +294,7 @@ CREATE TABLE `oral_supplements` (
   `frequency_per_day` INT NOT NULL DEFAULT 3,
   `total_daily_ml` INT NOT NULL,
   `note` VARCHAR(255) NULL,
-  CONSTRAINT `fk_os_diet` FOREIGN KEY (`diet_order_id`) REFERENCES `diet_orders` (`id`) ON DELETE CASCADE
+  INDEX `idx_os_diet` (`diet_order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 17. Tube Feedings
@@ -308,7 +308,7 @@ CREATE TABLE `tube_feedings` (
   `frequency_per_day` INT NOT NULL DEFAULT 4,
   `total_daily_ml` INT NOT NULL,
   `note` VARCHAR(255) NULL,
-  CONSTRAINT `fk_tf_diet` FOREIGN KEY (`diet_order_id`) REFERENCES `diet_orders` (`id`) ON DELETE CASCADE
+  INDEX `idx_tf_diet` (`diet_order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 18. Nutrition Clinical Notes (SOAP)
