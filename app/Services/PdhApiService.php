@@ -166,7 +166,21 @@ class PdhApiService {
     private function getFromCache(string $table, ?string $keyColumn, ?string $keyValue, string $errorReason): array {
         try {
             $pdo = Database::getConnection();
-            if ($keyColumn && $keyValue) {
+            if ($table === 'visits_cache' && !$keyColumn) {
+                $stmt = $pdo->query("
+                    SELECT v.*, p.fullname, p.age, p.gender, p.cid,
+                           n.naf_grade as last_naf_grade, n.assessment_date as last_naf_date
+                    FROM visits_cache v
+                    LEFT JOIN patients_cache p ON v.hn = p.hn
+                    LEFT JOIN (
+                        SELECT hn, naf_grade, assessment_date,
+                               ROW_NUMBER() OVER (PARTITION BY hn ORDER BY assessment_date DESC, id DESC) as rn
+                        FROM naf_assessments
+                    ) n ON v.hn = n.hn AND n.rn = 1
+                    ORDER BY v.visit_time ASC
+                ");
+                $data = $stmt->fetchAll();
+            } elseif ($keyColumn && $keyValue) {
                 $stmt = $pdo->prepare("SELECT * FROM {$table} WHERE {$keyColumn} = :val");
                 $stmt->execute(['val' => $keyValue]);
                 $data = $stmt->fetchAll();

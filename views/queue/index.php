@@ -93,19 +93,19 @@ use App\Helpers\DateHelper;
                       </a>
                     </td>
                     <td>
-                      <div class="fw-bold"><?= htmlspecialchars($t['fullname']) ?></div>
-                      <small class="text-muted">อายุ <?= $t['age'] ?> ปี (CID: <?= SanitizerHelper::maskCid($t['cid']) ?>)</small>
+                      <div class="fw-bold"><?= htmlspecialchars($t['fullname'] ?? 'ไม่ระบุชื่อ') ?></div>
+                      <small class="text-muted">อายุ <?= $t['age'] ?? '-' ?> ปี (CID: <?= SanitizerHelper::maskCid($t['cid'] ?? '') ?>)</small>
                     </td>
                     <td>
-                      <div><?= htmlspecialchars($t['clinic']) ?></div>
-                      <small class="text-muted"><i class="fa-solid fa-user-doctor me-1"></i><?= htmlspecialchars($t['doctor']) ?></small>
+                      <div><?= htmlspecialchars($t['clinic'] ?? 'คลินิกทั่วไป') ?></div>
+                      <small class="text-muted"><i class="fa-solid fa-user-doctor me-1"></i><?= htmlspecialchars($t['doctor'] ?? 'ไม่ระบุ') ?></small>
                     </td>
                     <td>
-                      <?php if ($t['last_naf_grade']): ?>
+                      <?php if (!empty($t['last_naf_grade'])): ?>
                         <span class="badge badge-naf-<?= strtolower(substr($t['last_naf_grade'], -1)) ?>">
-                          <?= htmlspecialchars($t['last_naf_grade']) ?> (Score: <?= $t['last_naf_score'] ?>)
+                          <?= htmlspecialchars($t['last_naf_grade']) ?> (Score: <?= $t['last_naf_score'] ?? '-' ?>)
                         </span>
-                        <div class="fs-8 text-muted"><?= DateHelper::formatThaiDate($t['last_naf_date'], true) ?></div>
+                        <div class="fs-8 text-muted"><?= DateHelper::formatThaiDate($t['last_naf_date'] ?? date('Y-m-d'), true) ?></div>
                       <?php else: ?>
                         <span class="text-muted fs-7">ยังไม่เคยประเมิน</span>
                       <?php endif; ?>

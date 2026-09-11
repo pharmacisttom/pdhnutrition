@@ -122,19 +122,19 @@ function renderVisitTable($visitList, $baseUrl) { ?>
         <?php foreach ($visitList as $v): ?>
           <tr>
             <td>
-              <span class="badge bg-secondary me-1"><?= htmlspecialchars($v['queue_number'] ?: 'Q-') ?></span>
-              <small class="text-muted"><?= htmlspecialchars($v['visit_time']) ?></small>
+              <span class="badge bg-secondary me-1"><?= htmlspecialchars($v['queue_number'] ?? 'Q-') ?></span>
+              <small class="text-muted"><?= htmlspecialchars($v['visit_time'] ?? '') ?></small>
             </td>
-            <td class="fw-bold"><?= htmlspecialchars($v['vn']) ?></td>
+            <td class="fw-bold"><?= htmlspecialchars($v['vn'] ?? '-') ?></td>
             <td class="fw-bold text-pdh-blue">
-              <a href="<?= $baseUrl ?>/patient/<?= htmlspecialchars($v['hn']) ?>" class="text-decoration-none"><?= htmlspecialchars($v['hn']) ?></a>
+              <a href="<?= $baseUrl ?>/patient/<?= htmlspecialchars($v['hn'] ?? '') ?>" class="text-decoration-none"><?= htmlspecialchars($v['hn'] ?? '') ?></a>
             </td>
-            <td class="fw-bold"><?= htmlspecialchars($v['fullname']) ?></td>
-            <td><?= $v['age'] ?> ปี</td>
-            <td><span class="badge bg-info-subtle text-info border border-info"><?= htmlspecialchars($v['clinic']) ?></span></td>
-            <td><?= htmlspecialchars($v['doctor']) ?></td>
+            <td class="fw-bold"><?= htmlspecialchars($v['fullname'] ?? ($v['first_name'] ?? 'ผู้ป่วยทั่วไป')) ?></td>
+            <td><?= isset($v['age']) ? htmlspecialchars($v['age']) . ' ปี' : '-' ?></td>
+            <td><span class="badge bg-info-subtle text-info border border-info"><?= htmlspecialchars($v['clinic'] ?? 'คลินิกทั่วไป') ?></span></td>
+            <td><?= htmlspecialchars($v['doctor'] ?? 'ไม่ระบุ') ?></td>
             <td>
-              <?php if ($v['last_naf_grade']): ?>
+              <?php if (!empty($v['last_naf_grade'])): ?>
                 <span class="badge badge-naf-<?= strtolower(substr($v['last_naf_grade'], -1)) ?>">
                   <?= htmlspecialchars($v['last_naf_grade']) ?>
                 </span>
@@ -143,10 +143,10 @@ function renderVisitTable($visitList, $baseUrl) { ?>
               <?php endif; ?>
             </td>
             <td class="text-center">
-              <a href="<?= $baseUrl ?>/naf/create?hn=<?= $v['hn'] ?>&vn=<?= $v['vn'] ?>" class="btn btn-sm btn-success me-1 fw-bold">
+              <a href="<?= $baseUrl ?>/naf/create?hn=<?= $v['hn'] ?? '' ?>&vn=<?= $v['vn'] ?? '' ?>" class="btn btn-sm btn-success me-1 fw-bold">
                 <i class="fa-solid fa-clipboard-check me-1"></i> เลือกประเมิน NAF
               </a>
-              <a href="<?= $baseUrl ?>/patient/<?= htmlspecialchars($v['hn']) ?>" class="btn btn-sm btn-outline-primary">
+              <a href="<?= $baseUrl ?>/patient/<?= htmlspecialchars($v['hn'] ?? '') ?>" class="btn btn-sm btn-outline-primary">
                 <i class="fa-solid fa-id-card me-1"></i> Profile
               </a>
             </td>

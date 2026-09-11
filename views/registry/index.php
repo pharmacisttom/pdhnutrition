@@ -51,16 +51,16 @@ use App\Helpers\DateHelper;
                   <td class="fw-bold text-pdh-blue">
                     <a href="<?= $baseUrl ?>/patient/<?= htmlspecialchars($r['hn']) ?>" class="text-decoration-none"><?= htmlspecialchars($r['hn']) ?></a>
                   </td>
-                  <td class="fw-bold"><?= htmlspecialchars($r['fullname']) ?></td>
-                  <td><?= $r['age'] ?> ปี</td>
+                  <td class="fw-bold"><?= htmlspecialchars($r['fullname'] ?? 'ไม่ระบุชื่อ') ?></td>
+                  <td><?= $r['age'] ?? '-' ?> ปี</td>
                   <td>
-                    <span class="badge bg-<?= ($r['risk_level'] === 'SEVERE' || $r['risk_level'] === 'HIGH') ? 'danger' : 'warning' ?>">
-                      <?= htmlspecialchars($r['risk_level']) ?>
+                    <span class="badge bg-<?= (in_array($r['risk_level'] ?? '', ['SEVERE', 'HIGH'])) ? 'danger' : 'warning' ?>">
+                      <?= htmlspecialchars($r['risk_level'] ?? 'MEDIUM') ?>
                     </span>
                   </td>
-                  <td><?= htmlspecialchars($r['reason']) ?></td>
+                  <td><?= htmlspecialchars($r['reason'] ?? '-') ?></td>
                   <td>
-                    <?php if ($r['last_naf_grade']): ?>
+                    <?php if (!empty($r['last_naf_grade'])): ?>
                       <span class="badge badge-naf-<?= strtolower(substr($r['last_naf_grade'], -1)) ?>"><?= htmlspecialchars($r['last_naf_grade']) ?></span>
                     <?php else: ?>
                       <span class="text-muted fs-7">ยังไม่เคยประเมิน</span>
