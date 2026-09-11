@@ -293,25 +293,34 @@ class SmartAlertService {
         $matrix = [
             'UNDERNUTRITION'  => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
             'OVERNUTRITION'   => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
-            'HYPERGLYCEMIA'  => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
-            'DYSLIPIDEMIA'    => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
-            'HYPOALBUMINEMIA' => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
-            'RENAL_RISK'      => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
+            'DEFICIENCY'      => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
+            'ELECTROLYTE'     => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
+            'HYPERGLYCEMIA'   => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
+            'DYSLIPIDEMIA'     => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
+            'HYPOALBUMINEMIA'  => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
+            'RENAL_RISK'       => ['CRITICAL' => 0, 'HIGH' => 0, 'MODERATE' => 0, 'LOW' => 0, 'patients' => []],
         ];
 
         foreach ($allAlertPatients as $p) {
             foreach ($p['alert_items'] as $item) {
                 $cat   = $item['type'] ?? 'UNDERNUTRITION';
                 $level = $item['level'] ?? 'LOW';
-                if (isset($matrix[$cat][$level])) {
-                    $matrix[$cat][$level]++;
-                    $matrix[$cat]['patients'][] = [
-                        'hn' => $p['hn'],
-                        'fullname' => $p['fullname'],
-                        'msg' => $item['msg'],
-                        'level' => $level,
-                        'clinic' => $p['last_clinic'] ?? 'OPD/IPD'
-                    ];
+
+                $targetCategories = [$cat];
+                if ($cat === 'HYPOALBUMINEMIA') $targetCategories[] = 'DEFICIENCY';
+                if ($cat === 'RENAL_RISK') $targetCategories[] = 'ELECTROLYTE';
+
+                foreach ($targetCategories as $tCat) {
+                    if (isset($matrix[$tCat][$level])) {
+                        $matrix[$tCat][$level]++;
+                        $matrix[$tCat]['patients'][] = [
+                            'hn' => $p['hn'],
+                            'fullname' => $p['fullname'],
+                            'msg' => $item['msg'],
+                            'level' => $level,
+                            'clinic' => $p['last_clinic'] ?? 'OPD/IPD'
+                        ];
+                    }
                 }
             }
         }

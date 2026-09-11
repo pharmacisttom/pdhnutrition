@@ -73,10 +73,10 @@ use App\Helpers\SanitizerHelper;
                 1. ภาวะพร่องสารอาหาร / ผอมรุนแรง<br>
                 <small class="text-muted fw-normal">Marasmus, NAF C, BMI &lt; 16.0, TLC &lt; 1,000</small>
               </td>
-              <td><?php renderHeatCell('UNDERNUTRITION', 'CRITICAL', $matrix['UNDERNUTRITION']['CRITICAL'], $matrix['UNDERNUTRITION']['patients']); ?></td>
-              <td><?php renderHeatCell('UNDERNUTRITION', 'HIGH', $matrix['UNDERNUTRITION']['HIGH'], $matrix['UNDERNUTRITION']['patients']); ?></td>
-              <td><?php renderHeatCell('UNDERNUTRITION', 'MODERATE', $matrix['UNDERNUTRITION']['MODERATE'], $matrix['UNDERNUTRITION']['patients']); ?></td>
-              <td><?php renderHeatCell('UNDERNUTRITION', 'LOW', $matrix['UNDERNUTRITION']['LOW'], $matrix['UNDERNUTRITION']['patients']); ?></td>
+              <td><?php renderHeatCell('UNDERNUTRITION', 'CRITICAL', $matrix['UNDERNUTRITION']['CRITICAL'] ?? 0, $matrix['UNDERNUTRITION']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('UNDERNUTRITION', 'HIGH', $matrix['UNDERNUTRITION']['HIGH'] ?? 0, $matrix['UNDERNUTRITION']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('UNDERNUTRITION', 'MODERATE', $matrix['UNDERNUTRITION']['MODERATE'] ?? 0, $matrix['UNDERNUTRITION']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('UNDERNUTRITION', 'LOW', $matrix['UNDERNUTRITION']['LOW'] ?? 0, $matrix['UNDERNUTRITION']['patients'] ?? []); ?></td>
             </tr>
 
             <!-- Row 2: OVERNUTRITION -->
@@ -86,10 +86,10 @@ use App\Helpers\SanitizerHelper;
                 2. ภาวะโภชนาการเกิน / อ้วนรุนแรง<br>
                 <small class="text-muted fw-normal">Obesity Class II/III, BMI &ge; 30.0, Metabolic Syndrome</small>
               </td>
-              <td><?php renderHeatCell('OVERNUTRITION', 'CRITICAL', $matrix['OVERNUTRITION']['CRITICAL'], $matrix['OVERNUTRITION']['patients']); ?></td>
-              <td><?php renderHeatCell('OVERNUTRITION', 'HIGH', $matrix['OVERNUTRITION']['HIGH'], $matrix['OVERNUTRITION']['patients']); ?></td>
-              <td><?php renderHeatCell('OVERNUTRITION', 'MODERATE', $matrix['OVERNUTRITION']['MODERATE'], $matrix['OVERNUTRITION']['patients']); ?></td>
-              <td><?php renderHeatCell('OVERNUTRITION', 'LOW', $matrix['OVERNUTRITION']['LOW'], $matrix['OVERNUTRITION']['patients']); ?></td>
+              <td><?php renderHeatCell('OVERNUTRITION', 'CRITICAL', $matrix['OVERNUTRITION']['CRITICAL'] ?? 0, $matrix['OVERNUTRITION']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('OVERNUTRITION', 'HIGH', $matrix['OVERNUTRITION']['HIGH'] ?? 0, $matrix['OVERNUTRITION']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('OVERNUTRITION', 'MODERATE', $matrix['OVERNUTRITION']['MODERATE'] ?? 0, $matrix['OVERNUTRITION']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('OVERNUTRITION', 'LOW', $matrix['OVERNUTRITION']['LOW'] ?? 0, $matrix['OVERNUTRITION']['patients'] ?? []); ?></td>
             </tr>
 
             <!-- Row 3: DEFICIENCY -->
@@ -99,10 +99,10 @@ use App\Helpers\SanitizerHelper;
                 3. ภาวะขาดโปรตีน / สารอาหารบกพร่อง<br>
                 <small class="text-muted fw-normal">Hypoalbuminemia (&lt; 2.5 g/dL), Protein Malnutrition</small>
               </td>
-              <td><?php renderHeatCell('DEFICIENCY', 'CRITICAL', $matrix['DEFICIENCY']['CRITICAL'], $matrix['DEFICIENCY']['patients']); ?></td>
-              <td><?php renderHeatCell('DEFICIENCY', 'HIGH', $matrix['DEFICIENCY']['HIGH'], $matrix['DEFICIENCY']['patients']); ?></td>
-              <td><?php renderHeatCell('DEFICIENCY', 'MODERATE', $matrix['DEFICIENCY']['MODERATE'], $matrix['DEFICIENCY']['patients']); ?></td>
-              <td><?php renderHeatCell('DEFICIENCY', 'LOW', $matrix['DEFICIENCY']['LOW'], $matrix['DEFICIENCY']['patients']); ?></td>
+              <td><?php renderHeatCell('DEFICIENCY', 'CRITICAL', $matrix['DEFICIENCY']['CRITICAL'] ?? 0, $matrix['DEFICIENCY']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('DEFICIENCY', 'HIGH', $matrix['DEFICIENCY']['HIGH'] ?? 0, $matrix['DEFICIENCY']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('DEFICIENCY', 'MODERATE', $matrix['DEFICIENCY']['MODERATE'] ?? 0, $matrix['DEFICIENCY']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('DEFICIENCY', 'LOW', $matrix['DEFICIENCY']['LOW'] ?? 0, $matrix['DEFICIENCY']['patients'] ?? []); ?></td>
             </tr>
 
             <!-- Row 4: ELECTROLYTE -->
@@ -112,10 +112,36 @@ use App\Helpers\SanitizerHelper;
                 4. ภาวะเกลือแร่เกิน / โรคไตล้มเหลว<br>
                 <small class="text-muted fw-normal">Hyperkalemia (K+ &gt; 5.5), ESRD / CKD Stage 5 Fluid Overload</small>
               </td>
-              <td><?php renderHeatCell('ELECTROLYTE', 'CRITICAL', $matrix['ELECTROLYTE']['CRITICAL'], $matrix['ELECTROLYTE']['patients']); ?></td>
-              <td><?php renderHeatCell('ELECTROLYTE', 'HIGH', $matrix['ELECTROLYTE']['HIGH'], $matrix['ELECTROLYTE']['patients']); ?></td>
-              <td><?php renderHeatCell('ELECTROLYTE', 'MODERATE', $matrix['ELECTROLYTE']['MODERATE'], $matrix['ELECTROLYTE']['patients']); ?></td>
-              <td><?php renderHeatCell('ELECTROLYTE', 'LOW', $matrix['ELECTROLYTE']['LOW'], $matrix['ELECTROLYTE']['patients']); ?></td>
+              <td><?php renderHeatCell('ELECTROLYTE', 'CRITICAL', $matrix['ELECTROLYTE']['CRITICAL'] ?? 0, $matrix['ELECTROLYTE']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('ELECTROLYTE', 'HIGH', $matrix['ELECTROLYTE']['HIGH'] ?? 0, $matrix['ELECTROLYTE']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('ELECTROLYTE', 'MODERATE', $matrix['ELECTROLYTE']['MODERATE'] ?? 0, $matrix['ELECTROLYTE']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('ELECTROLYTE', 'LOW', $matrix['ELECTROLYTE']['LOW'] ?? 0, $matrix['ELECTROLYTE']['patients'] ?? []); ?></td>
+            </tr>
+
+            <!-- Row 5: HYPERGLYCEMIA & DYSLIPIDEMIA -->
+            <tr>
+              <td class="fw-bold bg-light p-3 rounded">
+                <i class="fa-solid fa-droplet text-danger me-2"></i>
+                5. ภาวะน้ำตาลในเลือดสูง / ไขมันสูง<br>
+                <small class="text-muted fw-normal">FBS &ge; 126 mg/dL, HbA1c &ge; 6.5%, Cholesterol &ge; 200 mg/dL</small>
+              </td>
+              <td><?php renderHeatCell('HYPERGLYCEMIA', 'CRITICAL', $matrix['HYPERGLYCEMIA']['CRITICAL'] ?? 0, $matrix['HYPERGLYCEMIA']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('HYPERGLYCEMIA', 'HIGH', $matrix['HYPERGLYCEMIA']['HIGH'] ?? 0, $matrix['HYPERGLYCEMIA']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('HYPERGLYCEMIA', 'MODERATE', $matrix['HYPERGLYCEMIA']['MODERATE'] ?? 0, $matrix['HYPERGLYCEMIA']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('HYPERGLYCEMIA', 'LOW', $matrix['HYPERGLYCEMIA']['LOW'] ?? 0, $matrix['HYPERGLYCEMIA']['patients'] ?? []); ?></td>
+            </tr>
+
+            <!-- Row 6: RENAL_RISK -->
+            <tr>
+              <td class="fw-bold bg-light p-3 rounded">
+                <i class="fa-solid fa-flask-vial text-purple me-2"></i>
+                6. ภาวะการทำงานของไตเสื่อมลง (CKD Risk)<br>
+                <small class="text-muted fw-normal">eGFR &lt; 60 mL/min/1.73m², BUN &gt; 20.0 mg/dL, Creatinine &gt; 1.2</small>
+              </td>
+              <td><?php renderHeatCell('RENAL_RISK', 'CRITICAL', $matrix['RENAL_RISK']['CRITICAL'] ?? 0, $matrix['RENAL_RISK']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('RENAL_RISK', 'HIGH', $matrix['RENAL_RISK']['HIGH'] ?? 0, $matrix['RENAL_RISK']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('RENAL_RISK', 'MODERATE', $matrix['RENAL_RISK']['MODERATE'] ?? 0, $matrix['RENAL_RISK']['patients'] ?? []); ?></td>
+              <td><?php renderHeatCell('RENAL_RISK', 'LOW', $matrix['RENAL_RISK']['LOW'] ?? 0, $matrix['RENAL_RISK']['patients'] ?? []); ?></td>
             </tr>
 
           </tbody>
@@ -142,14 +168,17 @@ use App\Helpers\SanitizerHelper;
 </div>
 
 <?php
-function renderHeatCell($cat, $level, $count, $patients) {
+function renderHeatCell($cat, $level, $count = 0, $patients = []) {
+    $count = (int)($count ?? 0);
+    $patients = is_array($patients) ? $patients : [];
+
     if ($count === 0) {
         echo '<div class="heatmap-cell heat-zero">0 ราย</div>';
         return;
     }
 
     $cls = ($level === 'CRITICAL') ? 'heat-critical' : (($level === 'HIGH') ? 'heat-high' : (($level === 'MODERATE') ? 'heat-moderate' : 'heat-low'));
-    $filteredPatients = array_filter($patients, fn($p) => $p['level'] === $level);
+    $filteredPatients = array_filter($patients, fn($p) => is_array($p) && ($p['level'] ?? '') === $level);
     $json = htmlspecialchars(json_encode(array_values($filteredPatients)), ENT_QUOTES, 'UTF-8');
 
     echo "<div class=\"heatmap-cell {$cls}\" onclick=\"showPatientModal('{$cat}', '{$level}', {$json})\">";

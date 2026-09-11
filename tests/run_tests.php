@@ -129,6 +129,10 @@ assertTest("Report Service (Diet Orders Summary Report)", is_array($dietReport))
 $outcomesReport = \App\Services\ReportService::getOutcomesReport();
 assertTest("Report Service (Nutrition Outcomes Report)", is_array($outcomesReport));
 
+// 21. Heatmap Matrix Data Structure Test
+$heatmapMatrix = \App\Services\SmartAlertService::getHeatmapMatrix();
+assertTest("Clinical Risk Heatmap Matrix (DEFICIENCY & ELECTROLYTE Keys Exist)", isset($heatmapMatrix['DEFICIENCY']) && isset($heatmapMatrix['ELECTROLYTE']));
+
 echo "\n========================================================\n";
 echo "TEST RESULTS SUMMARY:\n";
 echo "PASSED: {$passCount} | FAILED: {$failCount}\n";
