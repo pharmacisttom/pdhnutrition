@@ -121,28 +121,6 @@ class PatientController {
         $visitsRes = $api->getTodayVisits();
         $visits = $visitsRes['data'] ?? [];
 
-        $pdo = Database::getConnection();
-        foreach ($visits as &$v) {
-            if (empty($v['fullname']) || !isset($v['age'])) {
-                $stmtP = $pdo->prepare("SELECT fullname, age FROM patients_cache WHERE hn = :hn");
-                $stmtP->execute(['hn' => $v['hn']]);
-                $p = $stmtP->fetch();
-                if ($p) {
-                    $v['fullname'] = $v['fullname'] ?? $p['fullname'];
-                    $v['age']      = $v['age'] ?? $p['age'];
-                }
-            }
-            if (!array_key_exists('last_naf_grade', $v)) {
-                $stmtN = $pdo->prepare("
-                    SELECT naf_grade FROM naf_assessments 
-                    WHERE hn = :hn ORDER BY assessment_date DESC, id DESC LIMIT 1
-                ");
-                $stmtN->execute(['hn' => $v['hn']]);
-                $v['last_naf_grade'] = $stmtN->fetchColumn() ?: null;
-            }
-        }
-        unset($v);
-
         AuditService::log('VIEW_TODAY_VISITS', 'PATIENTS');
 
         require __DIR__ . '/../../views/patients/today.php';

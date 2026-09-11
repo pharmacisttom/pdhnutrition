@@ -26,9 +26,16 @@ class PdhApiService {
         return $this->fetchFromGateway("/patient/{$hn}", 'patients_cache', 'hn', $hn);
     }
 
-    public function getTodayVisits(): array {
+    private static ?array $todayVisitsMemoryCache = null;
+
+    public function getTodayVisits(bool $forceRefresh = false): array {
+        if (self::$todayVisitsMemoryCache !== null && !$forceRefresh) {
+            return self::$todayVisitsMemoryCache;
+        }
+
         if ($this->driver === 'mock') {
-            return $this->getMockTodayVisits();
+            self::$todayVisitsMemoryCache = $this->getMockTodayVisits();
+            return self::$todayVisitsMemoryCache;
         }
 
         // Fetch Live Patients from HIMPRO Gateway (Active IPD & Chronic OPD)
@@ -150,6 +157,7 @@ class PdhApiService {
             $res['warning'] = null;
         }
 
+        self::$todayVisitsMemoryCache = $res;
         return $res;
     }
 
@@ -255,7 +263,8 @@ class PdhApiService {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_UNRESTRICTED_AUTH, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2); // 2 seconds max connect time to prevent freezing
+        curl_setopt($ch, CURLOPT_TIMEOUT, min($this->timeout, 4)); // 4 seconds max response time
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "X-API-Key: {$this->apiKey}",
             "Authorization: Bearer {$this->apiKey}",

@@ -36,6 +36,26 @@ class SmartAlertService {
         ");
         $patients = $stmt->fetchAll();
 
+        // 2. Fetch all latest lab results from local DB in 1 batch query to avoid N cURL network calls
+        $stmtLab = $pdo->query("
+            SELECT hn, test_name, result_value, result_unit, result_date
+            FROM lab_cache
+            ORDER BY result_date DESC, id DESC
+        ");
+        $rawLabs = $stmtLab->fetchAll();
+
+        $patientLabsMap = [];
+        foreach ($rawLabs as $l) {
+            $hn = $l['hn'];
+            if (!isset($patientLabsMap[$hn])) {
+                $patientLabsMap[$hn] = [];
+            }
+            $tKey = strtolower(trim($l['test_name']));
+            if (!isset($patientLabsMap[$hn][$tKey])) {
+                $patientLabsMap[$hn][$tKey] = (float)$l['result_value'];
+            }
+        }
+
         $critical24h = [];
         $urgent3Day  = [];
         $routine7Day = [];
@@ -69,8 +89,7 @@ class SmartAlertService {
             }
 
             // --- 2. LAB ABNORMALITIES EVALUATION (FBS, HbA1c, Lipids, Albumin, Renal) ---
-            $labRes = $api->getLatestLabs($p['hn']);
-            $latestLabs = $labRes['data'] ?? [];
+            $latestLabs = $patientLabsMap[$p['hn']] ?? [];
             $labAlerts = self::evaluateLabAlerts($latestLabs, $p);
 
             foreach ($labAlerts as $lAlert) {
