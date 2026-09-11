@@ -44,7 +44,7 @@ $currentRole = $_SESSION['user_role'] ?? 'VIEWER';
     </a>
 
     <a href="<?= $baseUrl ?>/reports" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg">
-      <i class="fa-solid fa-file-invoice me-2 text-info"></i> รายงานโภชนาการ (10)
+      <i class="fa-solid fa-file-invoice me-2 text-info"></i> รายงานโภชนาการ (13)
     </a>
 
     <?php if (in_array($currentRole, ['SUPER_ADMIN', 'ADMIN'])): ?>

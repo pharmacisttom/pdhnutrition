@@ -213,6 +213,75 @@ class ReportService {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // 11. Clinical Lab Abnormalities Report
+    public static function getLabAbnormalitiesReport(): array {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query("
+            SELECT p.hn, p.fullname, p.age, p.gender,
+                   l.test_name, l.result_value, l.result_unit, l.result_date
+            FROM lab_cache l
+            JOIN patients_cache p ON l.hn = p.hn
+            ORDER BY l.result_date DESC, l.id DESC
+        ");
+        $labs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $results = [];
+        foreach ($labs as $l) {
+            $tKey = strtolower(trim($l['test_name']));
+            $eval = SmartAlertService::evaluateLabAlerts([$tKey => (float)$l['result_value']]);
+            if (!empty($eval)) {
+                $results[] = [
+                    'hn' => $l['hn'],
+                    'fullname' => $l['fullname'],
+                    'age' => $l['age'] . ' ปี',
+                    'gender' => $l['gender'],
+                    'test_name' => $l['test_name'],
+                    'result_value' => $l['result_value'] . ' ' . ($l['result_unit'] ?? ''),
+                    'severity' => $eval[0]['level'],
+                    'alert_title' => $eval[0]['title'],
+                    'clinical_recommendation' => $eval[0]['action_th'],
+                    'result_date' => $l['result_date']
+                ];
+            }
+        }
+        return $results;
+    }
+
+    // 12. Diet Orders & Clinical Nutrition Summary Report
+    public static function getDietOrdersReport(): array {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query("
+            SELECT d.id, d.hn, p.fullname, d.weight_kg, d.height_cm, d.ibw_kg,
+                   d.total_energy_kcal, d.total_protein_g, d.diet_types_json,
+                   u.fullname as ordered_by_name, d.created_at
+            FROM diet_orders d
+            JOIN patients_cache p ON d.hn = p.hn
+            JOIN users u ON d.ordered_by = u.id
+            ORDER BY d.created_at DESC
+        ");
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($orders as &$o) {
+            $types = json_decode($o['diet_types_json'] ?? '[]', true);
+            $o['diet_types'] = is_array($types) ? implode(', ', $types) : $o['diet_types_json'];
+            unset($o['diet_types_json']);
+        }
+        return $orders;
+    }
+
+    // 13. Nutrition Outcomes & Weight Trends Report
+    public static function getOutcomesReport(): array {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query("
+            SELECT a.hn, p.fullname, a.assessment_date, a.weight_kg, a.height_cm, a.bmi, a.naf_grade, a.total_score,
+                   u.fullname as assessor_name
+            FROM naf_assessments a
+            JOIN patients_cache p ON a.hn = p.hn
+            JOIN users u ON a.assessor_id = u.id
+            ORDER BY a.hn ASC, a.assessment_date ASC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Export Handler for CSV
     public static function exportCsv(array $data, array $headers, string $filename): void {
         header('Content-Type: text/csv; charset=utf-8');

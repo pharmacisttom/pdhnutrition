@@ -65,6 +65,18 @@ class ReportController {
                 $reportTitle = "รายงานภาระงานนักโภชนาการ ({$month})";
                 $reportData = ReportService::getDietitianWorkload($month);
                 break;
+            case 'lab_abnormalities':
+                $reportTitle = "รายงานผู้ป่วยที่มีผล LAB ผิดปกติทางโภชนาการ (Clinical Lab Abnormalities)";
+                $reportData = ReportService::getLabAbnormalitiesReport();
+                break;
+            case 'diet_orders_summary':
+                $reportTitle = "รายงานสรุปการสั่งโภชนบำบัดและประเภทอาหารผู้ป่วย (Diet Orders Summary)";
+                $reportData = ReportService::getDietOrdersReport();
+                break;
+            case 'nutrition_outcomes':
+                $reportTitle = "รายงานผลการรักษาและแนวโน้มการเปลี่ยนแปลงโภชนาการ (Nutrition Outcomes)";
+                $reportData = ReportService::getOutcomesReport();
+                break;
             default:
                 http_response_code(404);
                 echo "<h1>404 Not Found</h1><p>ไม่พบรายงานรหัส: " . htmlspecialchars($reportCode) . "</p>";

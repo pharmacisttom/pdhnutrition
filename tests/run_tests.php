@@ -113,6 +113,22 @@ assertTest("Clinical Lab Alert Evaluator (Low Albumin & eGFR Risk)", count($renL
 $searchRes = $api->searchPatients('66000101');
 assertTest("Patient Keyword Search Service", $searchRes['success'] === true && is_array($searchRes['data']));
 
+// 17. Report Service - Monthly Summary Report Test
+$summaryReport = \App\Services\ReportService::getMonthlySummary(date('Y-m'));
+assertTest("Report Service (Monthly Summary)", is_array($summaryReport) && isset($summaryReport['compliance_pct']));
+
+// 18. Report Service - Lab Abnormalities Report Test
+$labReport = \App\Services\ReportService::getLabAbnormalitiesReport();
+assertTest("Report Service (Lab Abnormalities Report)", is_array($labReport));
+
+// 19. Report Service - Diet Orders Report Test
+$dietReport = \App\Services\ReportService::getDietOrdersReport();
+assertTest("Report Service (Diet Orders Summary Report)", is_array($dietReport));
+
+// 20. Report Service - Nutrition Outcomes Report Test
+$outcomesReport = \App\Services\ReportService::getOutcomesReport();
+assertTest("Report Service (Nutrition Outcomes Report)", is_array($outcomesReport));
+
 echo "\n========================================================\n";
 echo "TEST RESULTS SUMMARY:\n";
 echo "PASSED: {$passCount} | FAILED: {$failCount}\n";

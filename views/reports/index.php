@@ -137,6 +137,42 @@ require __DIR__ . '/../layouts/sidebar.php';
         </div>
       </div>
 
+      <!-- Report 11: Clinical Lab Abnormalities -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 p-3 shadow-sm border-start border-danger border-4 bg-danger-subtle">
+          <div class="d-flex align-items-center mb-2">
+            <i class="fa-solid fa-flask-vial text-danger fa-2x me-3"></i>
+            <h5 class="fw-bold text-danger mb-0">11. ผล LAB โภชนาการผิดปกติ</h5>
+          </div>
+          <p class="text-muted fs-7">รายงานผู้ป่วยที่มีผลแลปผิดปกติ (น้ำตาลสูง, ไขมันสูง, โปรตีนต่ำ, ค่าไตเสื่อม) พร้อมคำแนะนำ</p>
+          <a href="<?= $baseUrl ?>/reports/lab_abnormalities" class="btn btn-danger btn-sm fw-bold mt-auto"><i class="fa-solid fa-arrow-right me-1"></i> เปิดรายงาน</a>
+        </div>
+      </div>
+
+      <!-- Report 12: Diet Orders Summary -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 p-3 shadow-sm border-start border-primary border-4">
+          <div class="d-flex align-items-center mb-2">
+            <i class="fa-solid fa-utensils text-primary fa-2x me-3"></i>
+            <h5 class="fw-bold text-pdh-blue mb-0">12. สรุปคำสั่งโภชนบำบัด & Diet Orders</h5>
+          </div>
+          <p class="text-muted fs-7">รายงานคำสั่งอาหารโภชนบำบัด ONS สารอาหาร และ Tube Feeding Formula ทั้งหมด</p>
+          <a href="<?= $baseUrl ?>/reports/diet_orders_summary" class="btn btn-outline-primary btn-sm fw-bold mt-auto"><i class="fa-solid fa-arrow-right me-1"></i> เปิดรายงาน</a>
+        </div>
+      </div>
+
+      <!-- Report 13: Nutrition Therapy Outcomes -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 p-3 shadow-sm border-start border-success border-4">
+          <div class="d-flex align-items-center mb-2">
+            <i class="fa-solid fa-chart-line-up text-success fa-2x me-3"></i>
+            <h5 class="fw-bold text-pdh-blue mb-0">13. ประสิทธิผลการรักษา & Weight Trends</h5>
+          </div>
+          <p class="text-muted fs-7">รายงานติดตามการเปลี่ยนแปลงน้ำหนักตัว BMI และผลคะแนน NAF ย้อนหลังเพื่อวัดผลการดูแล</p>
+          <a href="<?= $baseUrl ?>/reports/nutrition_outcomes" class="btn btn-outline-success btn-sm fw-bold mt-auto"><i class="fa-solid fa-arrow-right me-1"></i> เปิดรายงาน</a>
+        </div>
+      </div>
+
     </div>
 
   </div>
