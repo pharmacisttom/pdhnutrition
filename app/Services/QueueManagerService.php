@@ -14,10 +14,18 @@ class QueueManagerService {
 
         if (empty($visits)) return 0;
 
+        $strictOnly = \App\Services\SystemSettingService::get('strict_active_clinics_only', '0') === '1';
+        $activeClinicNames = \App\Services\SystemSettingService::getActiveClinicNames();
+
         $taskCreated = 0;
         foreach ($visits as $visit) {
             $hn = $visit['hn'];
             $vn = $visit['vn'];
+            $clinic = $visit['clinic'] ?? 'OPD';
+
+            if ($strictOnly && !empty($activeClinicNames) && !in_array($clinic, $activeClinicNames)) {
+                continue;
+            }
 
             // Check if patient is in Nutrition Registry with active flag & review requirement
             $stmt = $pdo->prepare("

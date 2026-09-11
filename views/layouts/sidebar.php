@@ -50,11 +50,14 @@ $currentRole = $_SESSION['user_role'] ?? 'VIEWER';
     <?php if (in_array($currentRole, ['SUPER_ADMIN', 'ADMIN'])): ?>
       <div class="sidebar-heading text-white-50 text-uppercase px-3 pt-3 pb-1 fs-7">Administration</div>
       
+      <a href="<?= $baseUrl ?>/admin/settings" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg">
+        <i class="fa-solid fa-sliders me-2 text-warning"></i> ตั้งค่าระบบ & คลินิก
+      </a>
       <a href="<?= $baseUrl ?>/admin/users" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg">
         <i class="fa-solid fa-users me-2"></i> จัดการผู้ใช้งาน
       </a>
       <a href="<?= $baseUrl ?>/admin/rules" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg">
-        <i class="fa-solid fa-sliders me-2"></i> NAF Rules Engine
+        <i class="fa-solid fa-gears me-2"></i> NAF Rules Engine
       </a>
       <a href="<?= $baseUrl ?>/admin/audit-log" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg">
         <i class="fa-solid fa-shield-halved me-2"></i> Audit Log

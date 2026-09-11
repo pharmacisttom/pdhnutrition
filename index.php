@@ -100,6 +100,12 @@ try {
         (new \App\Controllers\AdminController())->users();
     } elseif ($uri === '/admin/users/create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         (new \App\Controllers\AdminController())->createUser();
+    } elseif ($uri === '/admin/settings') {
+        (new \App\Controllers\AdminController())->settings();
+    } elseif ($uri === '/admin/settings/save' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        (new \App\Controllers\AdminController())->saveSettings();
+    } elseif ($uri === '/admin/clinics') {
+        (new \App\Controllers\AdminController())->clinics();
     } elseif ($uri === '/admin/rules') {
         (new \App\Controllers\AdminController())->rules();
     } elseif ($uri === '/admin/audit-log') {

@@ -89,6 +89,14 @@ $api = new PdhApiService();
 $patientRes = $api->getPatient('0511037');
 assertTest("HIS API Service Response Format", $patientRes['success'] === true && is_array($patientRes['data']));
 
+// 11. System Clinics Management Test
+$clinics = \App\Services\SystemSettingService::getClinics();
+assertTest("System Clinics Master Retrieval", is_array($clinics) && count($clinics) > 0);
+
+// 12. Active Clinic Names Extraction Test
+$activeClinicNames = \App\Services\SystemSettingService::getActiveClinicNames();
+assertTest("Active Clinic Names Extraction", is_array($activeClinicNames) && count($activeClinicNames) > 0);
+
 echo "\n========================================================\n";
 echo "TEST RESULTS SUMMARY:\n";
 echo "PASSED: {$passCount} | FAILED: {$failCount}\n";
