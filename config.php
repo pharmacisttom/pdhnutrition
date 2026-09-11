@@ -37,5 +37,5 @@ if (strpos($serverHost, '192.168.111.240') !== false || $serverIp === '192.168.1
 
 // PDH API Gateway Config
 defined('PDH_API_BASE_URL') || define('PDH_API_BASE_URL', 'http://192.168.111.240/pdhapi');
-defined('PDH_API_KEY') || define('PDH_API_KEY', 'pdh_secret_key_2026');
+defined('PDH_API_KEY') || define('PDH_API_KEY', 'PDHAPI-CHANGE-THIS-KEY');
 defined('TIMEZONE') || define('TIMEZONE', 'Asia/Bangkok');

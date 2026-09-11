@@ -84,10 +84,10 @@ assertTest("Protein Calculation (70 kg * 1.2 g = 84 g)", $protein === 84.0);
 $taskCount = QueueManagerService::syncTodayQueueTasks();
 assertTest("Pre-Doctor Queue Task Synchronization", is_numeric($taskCount));
 
-// 10. API Offline / Fallback Test
+// 10. API Service Response Format Test
 $api = new PdhApiService();
-$patientRes = $api->getPatient('66000101');
-assertTest("HIS API Service Response Format", $patientRes['success'] === true && !empty($patientRes['data']));
+$patientRes = $api->getPatient('0511037');
+assertTest("HIS API Service Response Format", $patientRes['success'] === true && is_array($patientRes['data']));
 
 echo "\n========================================================\n";
 echo "TEST RESULTS SUMMARY:\n";

@@ -30,49 +30,150 @@ class PdhApiService {
         if ($this->driver === 'mock') {
             return $this->getMockTodayVisits();
         }
-        return $this->fetchFromGateway("/visits/today", 'visits_cache');
+
+        // Fetch Live Patients from HIMPRO Gateway (Active IPD & Chronic OPD)
+        $ipdRes = $this->fetchFromGateway("/v1/ipd/active?limit=50", 'admissions_cache');
+        $chronicRes = $this->fetchFromGateway("/v1/hdc/chronic?limit=50", 'patients_cache');
+
+        $pdo = Database::getConnection();
+        $todayStr = date('Y-m-d');
+
+        // 1. Sync Live IPD Admissions to patients_cache & visits_cache
+        if (!empty($ipdRes['data']) && is_array($ipdRes['data'])) {
+            $stmtP = $pdo->prepare("
+                INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, weight, synced_at)
+                VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :w, NOW())
+                ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), weight = VALUES(weight), synced_at = NOW()
+            ");
+            $stmtV = $pdo->prepare("
+                INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
+                VALUES (:vn, :hn, :vdate, :vtime, :clinic, 'IPD', :doc, :q)
+                ON DUPLICATE KEY UPDATE clinic = VALUES(clinic), doctor = VALUES(doctor)
+            ");
+
+            foreach ($ipdRes['data'] as $p) {
+                if (empty($p['hn'])) continue;
+                $gender = ($p['sex'] === 'SX2' || $p['sex'] === 'FEMALE') ? 'หญิง' : 'ชาย';
+                $bdate = $p['birth_date'] ?? null;
+                $age = 0;
+                if (!empty($bdate) && $bdate !== '0000-00-00') {
+                    $age = date_diff(date_create($bdate), date_create('today'))->y;
+                }
+                $stmtP->execute([
+                    'hn' => $p['hn'],
+                    'cid' => $p['cid'] ?? null,
+                    'fullname' => $p['patient_name'] ?? 'ผู้ป่วยใน IPD',
+                    'gender' => $gender,
+                    'bdate' => $bdate,
+                    'age' => $age,
+                    'w' => (float)($p['weight'] ?? 0)
+                ]);
+
+                $stmtV->execute([
+                    'vn' => $p['an'] ?? ('AN-' . $p['hn']),
+                    'hn' => $p['hn'],
+                    'vdate' => $p['admit_date'] ?? $todayStr,
+                    'vtime' => $p['admit_time'] ?? '08:00:00',
+                    'clinic' => 'คลินิกผู้ป่วยใน (IPD ' . ($p['ward_name'] ?? '') . ')',
+                    'doc' => $p['attending_doctor'] ?? 'แพทย์ประจำวอร์ด',
+                    'q' => $p['bed_no'] ?: 'IPD'
+                ]);
+            }
+        }
+
+        // 2. Sync Live Chronic Patients to patients_cache & visits_cache
+        if (!empty($chronicRes['data']) && is_array($chronicRes['data'])) {
+            $stmtP = $pdo->prepare("
+                INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, synced_at)
+                VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, NOW())
+                ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), synced_at = NOW()
+            ");
+            $stmtV = $pdo->prepare("
+                INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
+                VALUES (:vn, :hn, :vdate, :vtime, :clinic, 'OPD', :doc, :q)
+                ON DUPLICATE KEY UPDATE clinic = VALUES(clinic)
+            ");
+
+            $cIdx = 0;
+            foreach ($chronicRes['data'] as $c) {
+                $cIdx++;
+                $hn = $c['pid'] ?? $c['hn'] ?? ('HN' . str_pad($cIdx, 5, '0', STR_PAD_LEFT));
+                $gender = ($c['sex'] === '2' || $c['sex'] === 'FEMALE') ? 'หญิง' : 'ชาย';
+                $bdate = $c['birth_date'] ?? null;
+                $age = 0;
+                if (!empty($bdate) && $bdate !== '0000-00-00') {
+                    $age = date_diff(date_create($bdate), date_create('today'))->y;
+                }
+
+                $stmtP->execute([
+                    'hn' => $hn,
+                    'cid' => $c['cid'] ?? null,
+                    'fullname' => $c['fullname'] ?? ($c['first_name'] . ' ' . $c['last_name']),
+                    'gender' => $gender,
+                    'bdate' => $bdate,
+                    'age' => $age
+                ]);
+
+                $clinicName = (str_contains($c['chronic_code'] ?? '', 'E10') || str_contains($c['chronic_code'] ?? '', 'E11') || str_contains($c['chronic_code'] ?? '', 'E14')) 
+                    ? 'คลินิกเบาหวาน (NCD)' 
+                    : 'คลินิกโรคเรื้อรัง (NCD)';
+
+                $stmtV->execute([
+                    'vn' => 'VN' . date('Ymd') . str_pad($cIdx, 3, '0', STR_PAD_LEFT),
+                    'hn' => $hn,
+                    'vdate' => $todayStr,
+                    'vtime' => date('H:i:s', strtotime("08:00:00 +{$cIdx} minutes")),
+                    'clinic' => $clinicName,
+                    'doc' => 'นพ.ทัตเทพ บุญบำรุง',
+                    'q' => 'Q' . str_pad($cIdx, 3, '0', STR_PAD_LEFT)
+                ]);
+            }
+        }
+
+        // Return combined cached visits with full patient details
+        return $this->getFromCache('visits_cache', null, null, 'HIMPRO Live Data Synchronized');
     }
 
     public function getPatientVisits(string $hn): array {
         if ($this->driver === 'mock') {
             return $this->getMockPatientVisits($hn);
         }
-        return $this->fetchFromGateway("/patient/{$hn}/visits", 'visits_cache', 'hn', $hn);
+        return $this->fetchFromGateway("/v1/opd/visits?hn={$hn}", 'visits_cache', 'hn', $hn);
     }
 
     public function getCurrentAdmissions(): array {
         if ($this->driver === 'mock') {
             return $this->getMockCurrentAdmissions();
         }
-        return $this->fetchFromGateway("/admissions/current", 'admissions_cache');
+        return $this->fetchFromGateway("/v1/ipd/active?limit=50", 'admissions_cache');
     }
 
     public function getAdmission(string $an): array {
         if ($this->driver === 'mock') {
             return $this->getMockAdmission($an);
         }
-        return $this->fetchFromGateway("/admission/{$an}", 'admissions_cache', 'an', $an);
+        return $this->fetchFromGateway("/v1/ipd/admission?an={$an}", 'admissions_cache', 'an', $an);
     }
 
     public function getDiagnosis(string $hnOrVn): array {
         if ($this->driver === 'mock') {
             return $this->getMockDiagnosis($hnOrVn);
         }
-        return $this->fetchFromGateway("/diagnosis/{$hnOrVn}", 'diagnosis_cache', 'hn', $hnOrVn);
+        return $this->fetchFromGateway("/v1/hdc/chronic", 'diagnosis_cache', 'hn', $hnOrVn);
     }
 
     public function getLabs(string $hn): array {
         if ($this->driver === 'mock') {
             return $this->getMockLabs($hn);
         }
-        return $this->fetchFromGateway("/lab/{$hn}", 'lab_cache', 'hn', $hn);
+        return $this->fetchFromGateway("/v1/labs?q={$hn}", 'lab_cache', 'hn', $hn);
     }
 
     public function getLatestLabs(string $hn): array {
         if ($this->driver === 'mock') {
             return $this->getMockLatestLabs($hn);
         }
-        return $this->fetchFromGateway("/lab/{$hn}/latest", 'lab_cache', 'hn', $hn);
+        return $this->fetchFromGateway("/v1/labs?q={$hn}", 'lab_cache', 'hn', $hn);
     }
 
     public function getAppointments(string $hn): array {
@@ -99,7 +200,7 @@ class PdhApiService {
                 ]
             ];
         }
-        return $this->fetchFromGateway("/medications/{$hn}", 'patients_cache', 'hn', $hn);
+        return $this->fetchFromGateway("/v1/items?q={$hn}", 'patients_cache', 'hn', $hn);
     }
 
     public function getAllergies(string $hn): array {
@@ -121,7 +222,7 @@ class PdhApiService {
                 'data' => []
             ];
         }
-        return $this->fetchFromGateway("/allergy/{$hn}", 'patients_cache', 'hn', $hn);
+        return $this->fetchFromGateway("/v1/pt/allergies?hn={$hn}", 'patients_cache', 'hn', $hn);
     }
 
     // ==========================================
@@ -133,8 +234,11 @@ class PdhApiService {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_UNRESTRICTED_AUTH, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "X-API-Key: {$this->apiKey}",
             "Authorization: Bearer {$this->apiKey}",
             "Accept: application/json"
         ]);
@@ -146,9 +250,8 @@ class PdhApiService {
 
         if ($httpCode === 200 && !empty($response)) {
             $json = json_decode($response, true);
-            if (is_array($json)) {
-                $payload = $json['data'] ?? $json;
-                $this->updateLocalCache($cacheTable, $payload);
+            if (is_array($json) && isset($json['data'])) {
+                $payload = $json['data'];
                 return [
                     'success' => true,
                     'is_cached' => false,
