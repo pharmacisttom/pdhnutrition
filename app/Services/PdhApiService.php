@@ -38,96 +38,106 @@ class PdhApiService {
         $pdo = Database::getConnection();
         $todayStr = date('Y-m-d');
 
-        // 1. Sync Live IPD Admissions to patients_cache & visits_cache
-        if (!empty($ipdRes['data']) && is_array($ipdRes['data'])) {
-            $stmtP = $pdo->prepare("
-                INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, weight, synced_at)
-                VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :w, NOW())
-                ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), weight = VALUES(weight), synced_at = NOW()
-            ");
-            $stmtV = $pdo->prepare("
-                INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
-                VALUES (:vn, :hn, :vdate, :vtime, :clinic, 'IPD', :doc, :q)
-                ON DUPLICATE KEY UPDATE clinic = VALUES(clinic), doctor = VALUES(doctor)
-            ");
+        // Begin transaction for high-performance batch operations
+        $pdo->beginTransaction();
+        try {
+            // 1. Sync Live IPD Admissions to patients_cache & visits_cache
+            if (!empty($ipdRes['data']) && is_array($ipdRes['data'])) {
+                $stmtP = $pdo->prepare("
+                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, weight, synced_at)
+                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :w, NOW())
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), weight = VALUES(weight), synced_at = NOW()
+                ");
+                $stmtV = $pdo->prepare("
+                    INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
+                    VALUES (:vn, :hn, :vdate, :vtime, :clinic, 'IPD', :doc, :q)
+                    ON DUPLICATE KEY UPDATE clinic = VALUES(clinic), doctor = VALUES(doctor)
+                ");
 
-            foreach ($ipdRes['data'] as $p) {
-                if (empty($p['hn'])) continue;
-                $gender = ($p['sex'] === 'SX2' || $p['sex'] === 'FEMALE') ? 'หญิง' : 'ชาย';
-                $bdate = $p['birth_date'] ?? null;
-                $age = 0;
-                if (!empty($bdate) && $bdate !== '0000-00-00') {
-                    $age = date_diff(date_create($bdate), date_create('today'))->y;
+                foreach ($ipdRes['data'] as $p) {
+                    if (empty($p['hn'])) continue;
+                    $gender = ($p['sex'] === 'SX2' || $p['sex'] === 'FEMALE') ? 'หญิง' : 'ชาย';
+                    $bdate = $p['birth_date'] ?? null;
+                    $age = 0;
+                    if (!empty($bdate) && $bdate !== '0000-00-00') {
+                        $age = date_diff(date_create($bdate), date_create('today'))->y;
+                    }
+                    $stmtP->execute([
+                        'hn' => $p['hn'],
+                        'cid' => $p['cid'] ?? null,
+                        'fullname' => $p['patient_name'] ?? 'ผู้ป่วยใน IPD',
+                        'gender' => $gender,
+                        'bdate' => $bdate,
+                        'age' => $age,
+                        'w' => (float)($p['weight'] ?? 0)
+                    ]);
+
+                    $stmtV->execute([
+                        'vn' => $p['an'] ?? ('AN-' . $p['hn']),
+                        'hn' => $p['hn'],
+                        'vdate' => $p['admit_date'] ?? $todayStr,
+                        'vtime' => $p['admit_time'] ?? '08:00:00',
+                        'clinic' => 'คลินิกผู้ป่วยใน (IPD ' . ($p['ward_name'] ?? '') . ')',
+                        'doc' => $p['attending_doctor'] ?? 'แพทย์ประจำวอร์ด',
+                        'q' => $p['bed_no'] ?: 'IPD'
+                    ]);
                 }
-                $stmtP->execute([
-                    'hn' => $p['hn'],
-                    'cid' => $p['cid'] ?? null,
-                    'fullname' => $p['patient_name'] ?? 'ผู้ป่วยใน IPD',
-                    'gender' => $gender,
-                    'bdate' => $bdate,
-                    'age' => $age,
-                    'w' => (float)($p['weight'] ?? 0)
-                ]);
-
-                $stmtV->execute([
-                    'vn' => $p['an'] ?? ('AN-' . $p['hn']),
-                    'hn' => $p['hn'],
-                    'vdate' => $p['admit_date'] ?? $todayStr,
-                    'vtime' => $p['admit_time'] ?? '08:00:00',
-                    'clinic' => 'คลินิกผู้ป่วยใน (IPD ' . ($p['ward_name'] ?? '') . ')',
-                    'doc' => $p['attending_doctor'] ?? 'แพทย์ประจำวอร์ด',
-                    'q' => $p['bed_no'] ?: 'IPD'
-                ]);
             }
-        }
 
-        // 2. Sync Live Chronic Patients to patients_cache & visits_cache
-        if (!empty($chronicRes['data']) && is_array($chronicRes['data'])) {
-            $stmtP = $pdo->prepare("
-                INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, synced_at)
-                VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, NOW())
-                ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), synced_at = NOW()
-            ");
-            $stmtV = $pdo->prepare("
-                INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
-                VALUES (:vn, :hn, :vdate, :vtime, :clinic, 'OPD', :doc, :q)
-                ON DUPLICATE KEY UPDATE clinic = VALUES(clinic)
-            ");
+            // 2. Sync Live Chronic Patients to patients_cache & visits_cache
+            if (!empty($chronicRes['data']) && is_array($chronicRes['data'])) {
+                $stmtP = $pdo->prepare("
+                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, synced_at)
+                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, NOW())
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), synced_at = NOW()
+                ");
+                $stmtV = $pdo->prepare("
+                    INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
+                    VALUES (:vn, :hn, :vdate, :vtime, :clinic, 'OPD', :doc, :q)
+                    ON DUPLICATE KEY UPDATE clinic = VALUES(clinic)
+                ");
 
-            $cIdx = 0;
-            foreach ($chronicRes['data'] as $c) {
-                $cIdx++;
-                $hn = $c['pid'] ?? $c['hn'] ?? ('HN' . str_pad($cIdx, 5, '0', STR_PAD_LEFT));
-                $gender = ($c['sex'] === '2' || $c['sex'] === 'FEMALE') ? 'หญิง' : 'ชาย';
-                $bdate = $c['birth_date'] ?? null;
-                $age = 0;
-                if (!empty($bdate) && $bdate !== '0000-00-00') {
-                    $age = date_diff(date_create($bdate), date_create('today'))->y;
+                $cIdx = 0;
+                foreach ($chronicRes['data'] as $c) {
+                    $cIdx++;
+                    $hn = $c['pid'] ?? $c['hn'] ?? ('HN' . str_pad($cIdx, 5, '0', STR_PAD_LEFT));
+                    $gender = ($c['sex'] === '2' || $c['sex'] === 'FEMALE') ? 'หญิง' : 'ชาย';
+                    $bdate = $c['birth_date'] ?? null;
+                    $age = 0;
+                    if (!empty($bdate) && $bdate !== '0000-00-00') {
+                        $age = date_diff(date_create($bdate), date_create('today'))->y;
+                    }
+
+                    $stmtP->execute([
+                        'hn' => $hn,
+                        'cid' => $c['cid'] ?? null,
+                        'fullname' => $c['fullname'] ?? ($c['first_name'] . ' ' . $c['last_name']),
+                        'gender' => $gender,
+                        'bdate' => $bdate,
+                        'age' => $age
+                    ]);
+
+                    $clinicName = (str_contains($c['chronic_code'] ?? '', 'E10') || str_contains($c['chronic_code'] ?? '', 'E11') || str_contains($c['chronic_code'] ?? '', 'E14')) 
+                        ? 'คลินิกเบาหวาน (NCD)' 
+                        : 'คลินิกโรคเรื้อรัง (NCD)';
+
+                    $stmtV->execute([
+                        'vn' => 'VN' . date('Ymd') . str_pad($cIdx, 3, '0', STR_PAD_LEFT),
+                        'hn' => $hn,
+                        'vdate' => $todayStr,
+                        'vtime' => date('H:i:s', strtotime("08:00:00 +{$cIdx} minutes")),
+                        'clinic' => $clinicName,
+                        'doc' => 'นพ.ทัตเทพ บุญบำรุง',
+                        'q' => 'Q' . str_pad($cIdx, 3, '0', STR_PAD_LEFT)
+                    ]);
                 }
-
-                $stmtP->execute([
-                    'hn' => $hn,
-                    'cid' => $c['cid'] ?? null,
-                    'fullname' => $c['fullname'] ?? ($c['first_name'] . ' ' . $c['last_name']),
-                    'gender' => $gender,
-                    'bdate' => $bdate,
-                    'age' => $age
-                ]);
-
-                $clinicName = (str_contains($c['chronic_code'] ?? '', 'E10') || str_contains($c['chronic_code'] ?? '', 'E11') || str_contains($c['chronic_code'] ?? '', 'E14')) 
-                    ? 'คลินิกเบาหวาน (NCD)' 
-                    : 'คลินิกโรคเรื้อรัง (NCD)';
-
-                $stmtV->execute([
-                    'vn' => 'VN' . date('Ymd') . str_pad($cIdx, 3, '0', STR_PAD_LEFT),
-                    'hn' => $hn,
-                    'vdate' => $todayStr,
-                    'vtime' => date('H:i:s', strtotime("08:00:00 +{$cIdx} minutes")),
-                    'clinic' => $clinicName,
-                    'doc' => 'นพ.ทัตเทพ บุญบำรุง',
-                    'q' => 'Q' . str_pad($cIdx, 3, '0', STR_PAD_LEFT)
-                ]);
             }
+            $pdo->commit();
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log("getTodayVisits batch transaction failed: " . $e->getMessage());
         }
 
         // Return combined visits with live or cache status
