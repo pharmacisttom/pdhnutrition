@@ -1,0 +1,64 @@
+/* ========================================================
+   PDH Nutrition - Print Layout CSS (A4 Printable Forms)
+   ======================================================== */
+
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Sarabun', sans-serif !important;
+    font-size: 14pt !important;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+  }
+
+  .no-print, nav, sidebar, footer, .btn, .top-navbar {
+    display: none !important;
+  }
+
+  .print-page {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 10mm;
+    box-sizing: border-box;
+  }
+
+  .print-header {
+    text-align: center;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+  }
+
+  .print-table th, .print-table td {
+    border: 1px solid #000000;
+    padding: 6px 8px;
+    text-align: left;
+    font-size: 12pt;
+  }
+
+  .print-table th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold;
+  }
+
+  .print-signature-box {
+    margin-top: 40px;
+    float: right;
+    width: 250px;
+    text-align: center;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+}

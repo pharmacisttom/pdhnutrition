@@ -1,0 +1,119 @@
+/* ========================================================
+   PDH Nutrition - Clinical Nutrition System CSS
+   Theme: Deep Blue (#0d3b66), Medical Green (#06d6a0), Soft Gray (#f8f9fa)
+   Font: Sarabun, Noto Sans Thai
+   ======================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --pdh-blue: #0d3b66;
+  --pdh-blue-light: #1d5b96;
+  --pdh-green: #06d6a0;
+  --pdh-amber: #f77f00;
+  --pdh-red: #d62828;
+  --pdh-purple: #7209b7;
+  --pdh-gray: #f8f9fa;
+  --pdh-dark: #212529;
+}
+
+body {
+  font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+  background-color: var(--pdh-gray);
+  color: var(--pdh-dark);
+  font-size: 0.95rem;
+}
+
+.bg-pdh-blue {
+  background-color: var(--pdh-blue) !important;
+  color: #ffffff;
+}
+
+.text-pdh-blue {
+  color: var(--pdh-blue) !important;
+}
+
+/* NAF Risk Badges */
+.badge-naf-a {
+  background-color: #06d6a0 !important;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.45em 0.75em;
+  border-radius: 6px;
+}
+
+.badge-naf-b {
+  background-color: #f77f00 !important;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.45em 0.75em;
+  border-radius: 6px;
+}
+
+.badge-naf-c {
+  background-color: #d62828 !important;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.45em 0.75em;
+  border-radius: 6px;
+}
+
+/* Queue Status Badges */
+.badge-status-waiting {
+  background-color: #f77f00;
+  color: #ffffff;
+}
+
+.badge-status-assessing {
+  background-color: #007bff;
+  color: #ffffff;
+}
+
+.badge-status-completed {
+  background-color: #06d6a0;
+  color: #ffffff;
+}
+
+.badge-status-ready {
+  background-color: #7209b7;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Sticky NAF Calculation Panel */
+.sticky-naf-panel {
+  position: sticky;
+  top: 75px;
+  z-index: 100;
+  border-left: 4px solid var(--pdh-blue);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.patient-header-banner {
+  background: linear-gradient(135deg, #0d3b66 0%, #1d5b96 100%);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 8px rgba(13, 59, 102, 0.15);
+}
+
+.card {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
+  font-weight: 600;
+}
+
+.table th {
+  font-weight: 600;
+  background-color: #f1f3f5;
+}
