@@ -7,8 +7,9 @@ $userRole = $_SESSION['user_role'] ?? 'DIETITIAN';
 ?>
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm py-2 px-3 no-print">
   <div class="container-fluid">
-    <span class="navbar-brand fw-bold text-pdh-blue fs-5">
-      <i class="fa-solid fa-hospital me-2 text-danger"></i> โรงพยาบาลปลวกแดง
+    <span class="navbar-brand fw-bold text-pdh-blue fs-5 d-flex align-items-center">
+      <img src="<?= $baseUrl ?>/public/assets/img/logo.png" alt="PDH Nutrition Logo" style="height: 35px; width: 35px; border-radius: 50%; object-fit: cover;" class="me-2 shadow-sm">
+      โรงพยาบาลปลวกแดง
     </span>
 
     <div class="d-flex align-items-center ms-auto">

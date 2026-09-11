@@ -6,7 +6,7 @@ $currentRole = $_SESSION['user_role'] ?? 'VIEWER';
 <!-- Sidebar -->
 <div class="bg-pdh-blue border-end no-print" id="sidebar-wrapper" style="min-width: 250px; max-width: 250px; min-height: 100vh;">
   <div class="sidebar-heading text-white fw-bold py-3 px-3 border-bottom fs-5 d-flex align-items-center">
-    <i class="fa-solid fa-heart-pulse text-success me-2 fs-4"></i>
+    <img src="<?= $baseUrl ?>/public/assets/img/logo.png" alt="PDH Nutrition Logo" style="height: 45px; width: 45px; border-radius: 50%; object-fit: cover;" class="me-2 shadow-sm">
     <div>
       <div>PDH Nutrition</div>
       <small class="fw-normal text-white-50 fs-6">รพ.ปลวกแดง</small>

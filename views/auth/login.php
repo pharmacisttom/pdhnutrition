@@ -33,9 +33,7 @@ $baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
 
 <div class="card login-card bg-white p-4">
   <div class="text-center mb-4">
-    <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex p-3 mb-2">
-      <i class="fa-solid fa-heart-pulse fa-3x text-pdh-blue"></i>
-    </div>
+    <img src="<?= $baseUrl ?>/public/assets/img/logo.png" alt="PDH Nutrition Logo" style="height: 90px; width: 90px; border-radius: 50%; object-fit: cover;" class="mb-3 shadow">
     <h4 class="fw-bold text-pdh-blue mb-1">PDH Nutrition System</h4>
     <p class="text-muted fs-6">ระบบบริหารจัดการภาวะโภชนาการผู้ป่วย โรงพยาบาลปลวกแดง</p>
   </div>
