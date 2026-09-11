@@ -130,8 +130,17 @@ class PdhApiService {
             }
         }
 
-        // Return combined cached visits with full patient details
-        return $this->getFromCache('visits_cache', null, null, 'HIMPRO Live Data Synchronized');
+        // Return combined visits with live or cache status
+        $isLive = (!empty($ipdRes['success']) && !($ipdRes['is_cached'] ?? true)) || (!empty($chronicRes['success']) && !($chronicRes['is_cached'] ?? true));
+        $res = $this->getFromCache('visits_cache', null, null, 'HIMPRO Live Data Synchronized');
+
+        if ($isLive) {
+            $res['is_cached'] = false;
+            $res['source'] = 'PDH API Gateway (HIMPRO Live)';
+            $res['warning'] = null;
+        }
+
+        return $res;
     }
 
     public function getPatientVisits(string $hn): array {
