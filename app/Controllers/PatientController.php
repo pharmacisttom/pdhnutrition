@@ -23,7 +23,7 @@ class PatientController {
 
         // 1. If keyword search is entered, sync matching live patients from HIMPRO Gateway
         if (!empty($query)) {
-            $gatewayRes = $api->fetchFromGateway("/v1/patients/search?q=" . urlencode($query), 'patients_cache');
+            $gatewayRes = $api->searchPatients($query);
             if (!empty($gatewayRes['data']) && is_array($gatewayRes['data'])) {
                 $stmtP = $pdo->prepare("
                     INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, phone, synced_at)

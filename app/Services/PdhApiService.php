@@ -26,6 +26,21 @@ class PdhApiService {
         return $this->fetchFromGateway("/patient/{$hn}", 'patients_cache', 'hn', $hn);
     }
 
+    public function searchPatients(string $query): array {
+        if ($this->driver === 'mock') {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare("SELECT * FROM patients_cache WHERE hn LIKE :q OR cid LIKE :q OR fullname LIKE :q LIMIT 20");
+            $stmt->execute(['q' => "%{$query}%"]);
+            return [
+                'success' => true,
+                'is_cached' => false,
+                'source' => 'HIS (Mock)',
+                'data' => $stmt->fetchAll()
+            ];
+        }
+        return $this->fetchFromGateway("/v1/patients/search?q=" . urlencode($query), 'patients_cache');
+    }
+
     private static ?array $todayVisitsMemoryCache = null;
 
     public function getTodayVisits(bool $forceRefresh = false): array {

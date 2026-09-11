@@ -109,6 +109,10 @@ assertTest("Clinical Lab Alert Evaluator (High Lipids)", count($lipidLabAlerts) 
 $renLabAlerts = \App\Services\SmartAlertService::evaluateLabAlerts(['albumin' => 2.4, 'egfr' => 45.0]);
 assertTest("Clinical Lab Alert Evaluator (Low Albumin & eGFR Risk)", count($renLabAlerts) === 2);
 
+// 16. Patient Keyword Search Test
+$searchRes = $api->searchPatients('66000101');
+assertTest("Patient Keyword Search Service", $searchRes['success'] === true && is_array($searchRes['data']));
+
 echo "\n========================================================\n";
 echo "TEST RESULTS SUMMARY:\n";
 echo "PASSED: {$passCount} | FAILED: {$failCount}\n";
