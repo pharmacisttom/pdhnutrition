@@ -52,6 +52,12 @@ try {
         (new \App\Controllers\DashboardController())->getAnalyticsData();
     } elseif ($uri === '/patients/search') {
         (new \App\Controllers\PatientController())->search();
+    } elseif ($uri === '/alerts') {
+        (new \App\Controllers\AlertController())->index();
+    } elseif ($uri === '/alerts/heatmap') {
+        (new \App\Controllers\AlertController())->heatmap();
+    } elseif ($uri === '/alerts/broadcast' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        (new \App\Controllers\AlertController())->broadcast();
     } elseif ($uri === '/patients/today') {
         (new \App\Controllers\PatientController())->todayVisits();
     } elseif (preg_match('#^/patient/([A-Za-z0-9]+)$#', $uri, $matches)) {

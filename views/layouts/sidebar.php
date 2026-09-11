@@ -31,6 +31,14 @@ $currentRole = $_SESSION['user_role'] ?? 'VIEWER';
       <i class="fa-solid fa-magnifying-glass me-2 text-warning"></i> ค้นหาผู้ป่วย
     </a>
 
+    <a href="<?= $baseUrl ?>/alerts" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg">
+      <i class="fa-solid fa-bell me-2 text-danger"></i> Smart Daily Alerts
+    </a>
+
+    <a href="<?= $baseUrl ?>/alerts/heatmap" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg">
+      <i class="fa-solid fa-fire-flame-curved me-2 text-warning"></i> Clinical Risk Heatmap
+    </a>
+
     <a href="<?= $baseUrl ?>/registry" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg">
       <i class="fa-solid fa-clipboard-list me-2 text-primary"></i> Nutrition Registry
     </a>
