@@ -247,6 +247,15 @@ class NafController {
         $stmtHist->execute(['hn' => $assessment['hn']]);
         $history = array_reverse($stmtHist->fetchAll());
 
+        $stmtAns = $pdo->prepare("
+            SELECT ans.*, r.label_th, r.section 
+            FROM naf_answers ans 
+            LEFT JOIN naf_rules r ON ans.item_code = r.item_code 
+            WHERE ans.assessment_id = :id
+        ");
+        $stmtAns->execute(['id' => $id]);
+        $answers = $stmtAns->fetchAll();
+
         AuditService::log('PRINT_NAF', 'NAF', (string)$id, $assessment['hn'], $assessment['vn']);
 
         require __DIR__ . '/../../views/naf/print.php';
