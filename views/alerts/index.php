@@ -164,7 +164,15 @@ function renderAlertTable($list, $baseUrl, $badgeType) { ?>
 
             <td>
               <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($p['fullname']) ?></div>
-              <small class="text-muted"><i class="fa-solid fa-phone me-1"></i><?= htmlspecialchars($p['phone'] ?? '-') ?></small>
+              <small class="text-muted">
+                <?php if (!empty($p['phone']) && $p['phone'] !== '-'): ?>
+                  <a href="tel:<?= htmlspecialchars(preg_replace('/[^\d]/', '', $p['phone'])) ?>" class="text-decoration-none text-muted fw-semibold" title="โทรออกหาผู้ป่วย">
+                    <i class="fa-solid fa-phone me-1 text-success"></i><?= htmlspecialchars($p['phone']) ?>
+                  </a>
+                <?php else: ?>
+                  <i class="fa-solid fa-phone me-1 text-muted"></i>-
+                <?php endif; ?>
+              </small>
             </td>
 
             <td>

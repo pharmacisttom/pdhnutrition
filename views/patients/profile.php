@@ -45,7 +45,15 @@ $egfr = round(141 * pow(min(($cr / ($isFemale ? 0.7 : 0.9)), 1), ($isFemale ? -0
           </div>
           <h2 class="fw-bold m-0 text-white"><?= htmlspecialchars($patient['fullname']) ?></h2>
           <div class="mt-2 text-white-50 fs-7">
-            <span><i class="fa-solid fa-phone me-1"></i> เบอร์โทร: <?= htmlspecialchars($patient['phone'] ?: '-') ?></span>
+            <span>
+              <?php if (!empty($patient['phone']) && $patient['phone'] !== '-'): ?>
+                <a href="tel:<?= htmlspecialchars(preg_replace('/[^\d]/', '', $patient['phone'])) ?>" class="text-white text-decoration-none fw-bold" title="คลิกเพื่อโทรออก">
+                  <i class="fa-solid fa-phone me-1 text-warning"></i> เบอร์โทร: <?= htmlspecialchars($patient['phone']) ?>
+                </a>
+              <?php else: ?>
+                <i class="fa-solid fa-phone me-1"></i> เบอร์โทร: -
+              <?php endif; ?>
+            </span>
             <span class="ms-3"><i class="fa-solid fa-calendar-check me-1"></i> วันเกิด: <?= DateHelper::formatThaiDate($patient['birthdate']) ?></span>
             <span class="ms-3"><i class="fa-solid fa-sync me-1"></i> ซิงค์ล่าสุด: <?= $patient['synced_at'] ?? date('Y-m-d H:i') ?></span>
           </div>

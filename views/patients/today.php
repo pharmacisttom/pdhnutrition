@@ -129,7 +129,16 @@ function renderVisitTable($visitList, $baseUrl) { ?>
             <td class="fw-bold text-pdh-blue">
               <a href="<?= $baseUrl ?>/patient/<?= htmlspecialchars($v['hn'] ?? '') ?>" class="text-decoration-none"><?= htmlspecialchars($v['hn'] ?? '') ?></a>
             </td>
-            <td class="fw-bold"><?= htmlspecialchars($v['fullname'] ?? ($v['first_name'] ?? 'ผู้ป่วยทั่วไป')) ?></td>
+            <td>
+              <div class="fw-bold"><?= htmlspecialchars($v['fullname'] ?? ($v['first_name'] ?? 'ผู้ป่วยทั่วไป')) ?></div>
+              <small class="text-muted">
+                <?php if (!empty($v['phone']) && $v['phone'] !== '-'): ?>
+                  <a href="tel:<?= htmlspecialchars(preg_replace('/[^\d]/', '', $v['phone'])) ?>" class="text-decoration-none text-muted fw-semibold" title="โทรออกหาผู้ป่วย">
+                    <i class="fa-solid fa-phone me-1 text-success"></i><?= htmlspecialchars($v['phone']) ?>
+                  </a>
+                <?php endif; ?>
+              </small>
+            </td>
             <td><?= isset($v['age']) ? htmlspecialchars($v['age']) . ' ปี' : '-' ?></td>
             <td><span class="badge bg-info-subtle text-info border border-info"><?= htmlspecialchars($v['clinic'] ?? 'คลินิกทั่วไป') ?></span></td>
             <td><?= htmlspecialchars($v['doctor'] ?? 'ไม่ระบุ') ?></td>

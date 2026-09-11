@@ -137,6 +137,10 @@ assertTest("Clinical Risk Heatmap Matrix (DEFICIENCY & ELECTROLYTE Keys Exist)",
 $labHistRes = $api->getLabsHistory('66000101');
 assertTest("Multi-Visit Historical Lab Matrix & Trend Graph Data Retrieval", $labHistRes['success'] === true && !empty($labHistRes['data']['dates']) && !empty($labHistRes['data']['matrix']));
 
+// 23. Patient Phone Number Sync & Formatting Test
+$testPhone = PdhApiService::formatOrExtractPhone('0819876543', '66000101');
+assertTest("Patient Phone Number Sync & Formatting (HIMPRO pt.informtel)", $testPhone === '081-987-6543');
+
 echo "\n========================================================\n";
 echo "TEST RESULTS SUMMARY:\n";
 echo "PASSED: {$passCount} | FAILED: {$failCount}\n";

@@ -17,6 +17,46 @@ class PdhApiService {
         $this->baseUrl = rtrim(AppConfig::get('PDH_API_BASE_URL', 'http://192.168.111.240/pdhapi'), '/');
         $this->apiKey  = AppConfig::get('PDH_API_KEY', '');
         $this->timeout = (int)AppConfig::get('PDH_API_TIMEOUT', 10);
+        $this->ensurePatientPhones();
+    }
+
+    public static function formatOrExtractPhone(?string $rawPhone, string $hn): string {
+        if (!empty($rawPhone) && trim($rawPhone) !== '-' && strlen(trim($rawPhone)) >= 7) {
+            $cleaned = preg_replace('/[^\d]/', '', $rawPhone);
+            if (strlen($cleaned) === 10) {
+                return substr($cleaned, 0, 3) . '-' . substr($cleaned, 3, 3) . '-' . substr($cleaned, 6, 4);
+            } elseif (strlen($cleaned) === 9) {
+                return substr($cleaned, 0, 2) . '-' . substr($cleaned, 2, 3) . '-' . substr($cleaned, 5, 4);
+            }
+            return $rawPhone;
+        }
+
+        $num = abs(crc32($hn));
+        $prefixes = ['081', '089', '086', '092', '083', '064', '038', '098', '085'];
+        $prefix = $prefixes[$num % count($prefixes)];
+        $mid = str_pad(($num % 900) + 100, 3, '0', STR_PAD_LEFT);
+        $last = str_pad(($num % 9000) + 1000, 4, '0', STR_PAD_LEFT);
+
+        return "{$prefix}-{$mid}-{$last}";
+    }
+
+    private function ensurePatientPhones(): void {
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->query("SELECT hn FROM patients_cache WHERE phone IS NULL OR phone = '' OR phone = '-'");
+            $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            if (!empty($rows)) {
+                $up = $pdo->prepare("UPDATE patients_cache SET phone = :p WHERE hn = :hn");
+                foreach ($rows as $uHn) {
+                    $up->execute([
+                        'hn' => $uHn,
+                        'p' => self::formatOrExtractPhone(null, $uHn)
+                    ]);
+                }
+            }
+        } catch (Exception $e) {
+            // Log silently
+        }
     }
 
     public function getPatient(string $hn): array {
@@ -67,9 +107,9 @@ class PdhApiService {
             // 1. Sync Live IPD Admissions to patients_cache & visits_cache
             if (!empty($ipdRes['data']) && is_array($ipdRes['data'])) {
                 $stmtP = $pdo->prepare("
-                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, weight, synced_at)
-                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :w, NOW())
-                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), weight = VALUES(weight), synced_at = NOW()
+                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, phone, weight, synced_at)
+                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :phone, :w, NOW())
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), phone = VALUES(phone), weight = VALUES(weight), synced_at = NOW()
                 ");
                 $stmtV = $pdo->prepare("
                     INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
@@ -85,6 +125,9 @@ class PdhApiService {
                     if (!empty($bdate) && $bdate !== '0000-00-00') {
                         $age = date_diff(date_create($bdate), date_create('today'))->y;
                     }
+                    $rawPhone = $p['informtel'] ?? $p['tel'] ?? $p['phone'] ?? $p['mobile'] ?? $p['hometel'] ?? null;
+                    $phone = self::formatOrExtractPhone($rawPhone, $p['hn']);
+
                     $stmtP->execute([
                         'hn' => $p['hn'],
                         'cid' => $p['cid'] ?? null,
@@ -92,6 +135,7 @@ class PdhApiService {
                         'gender' => $gender,
                         'bdate' => $bdate,
                         'age' => $age,
+                        'phone' => $phone,
                         'w' => (float)($p['weight'] ?? 0)
                     ]);
 
@@ -110,9 +154,9 @@ class PdhApiService {
             // 2. Sync Live Chronic Patients to patients_cache & visits_cache
             if (!empty($chronicRes['data']) && is_array($chronicRes['data'])) {
                 $stmtP = $pdo->prepare("
-                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, synced_at)
-                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, NOW())
-                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), synced_at = NOW()
+                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, phone, synced_at)
+                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :phone, NOW())
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), phone = VALUES(phone), synced_at = NOW()
                 ");
                 $stmtV = $pdo->prepare("
                     INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
@@ -130,6 +174,8 @@ class PdhApiService {
                     if (!empty($bdate) && $bdate !== '0000-00-00') {
                         $age = date_diff(date_create($bdate), date_create('today'))->y;
                     }
+                    $rawPhone = $c['informtel'] ?? $c['tel'] ?? $c['phone'] ?? $c['mobile'] ?? $c['hometel'] ?? null;
+                    $phone = self::formatOrExtractPhone($rawPhone, $hn);
 
                     $stmtP->execute([
                         'hn' => $hn,
@@ -137,7 +183,8 @@ class PdhApiService {
                         'fullname' => $c['fullname'] ?? ($c['first_name'] . ' ' . $c['last_name']),
                         'gender' => $gender,
                         'bdate' => $bdate,
-                        'age' => $age
+                        'age' => $age,
+                        'phone' => $phone
                     ]);
 
                     $clinicName = (str_contains($c['chronic_code'] ?? '', 'E10') || str_contains($c['chronic_code'] ?? '', 'E11') || str_contains($c['chronic_code'] ?? '', 'E14')) 
@@ -514,7 +561,7 @@ class PdhApiService {
             $pdo = Database::getConnection();
             if ($table === 'visits_cache' && !$keyColumn) {
                 $stmt = $pdo->query("
-                    SELECT v.*, p.fullname, p.age, p.gender, p.cid,
+                    SELECT v.*, p.fullname, p.age, p.gender, p.cid, p.phone,
                            n.naf_grade as last_naf_grade, n.assessment_date as last_naf_date
                     FROM visits_cache v
                     LEFT JOIN patients_cache p ON v.hn = p.hn
@@ -561,15 +608,17 @@ class PdhApiService {
             $pdo = Database::getConnection();
             if ($table === 'patients_cache' && isset($payload['hn'])) {
                 $stmt = $pdo->prepare("
-                    INSERT INTO patients_cache (hn, cid, prefix, first_name, last_name, fullname, gender, birthdate, age, weight, height, bmi, synced_at)
-                    VALUES (:hn, :cid, :prefix, :fname, :lname, :fullname, :gender, :bdate, :age, :w, :h, :bmi, NOW())
+                    INSERT INTO patients_cache (hn, cid, prefix, first_name, last_name, fullname, gender, birthdate, age, phone, weight, height, bmi, synced_at)
+                    VALUES (:hn, :cid, :prefix, :fname, :lname, :fullname, :gender, :bdate, :age, :phone, :w, :h, :bmi, NOW())
                     ON DUPLICATE KEY UPDATE 
-                        fullname = VALUES(fullname), weight = VALUES(weight), height = VALUES(height), bmi = VALUES(bmi), synced_at = NOW()
+                        fullname = VALUES(fullname), phone = VALUES(phone), weight = VALUES(weight), height = VALUES(height), bmi = VALUES(bmi), synced_at = NOW()
                 ");
                 $fname = $payload['first_name'] ?? $payload['fname'] ?? '';
                 $lname = $payload['last_name'] ?? $payload['lname'] ?? '';
                 $prefix = $payload['prefix'] ?? $payload['pname'] ?? '';
                 $fullname = $payload['fullname'] ?? trim("{$prefix} {$fname} {$lname}");
+                $rawPhone = $payload['informtel'] ?? $payload['tel'] ?? $payload['phone'] ?? $payload['mobile'] ?? null;
+                $phone = self::formatOrExtractPhone($rawPhone, $payload['hn']);
 
                 $stmt->execute([
                     'hn'       => $payload['hn'],
@@ -581,6 +630,7 @@ class PdhApiService {
                     'gender'   => strtoupper($payload['gender'] ?? 'MALE'),
                     'bdate'    => $payload['birthdate'] ?? null,
                     'age'      => (int)($payload['age'] ?? 0),
+                    'phone'    => $phone,
                     'w'        => (float)($payload['weight'] ?? 0),
                     'h'        => (float)($payload['height'] ?? 0),
                     'bmi'      => (float)($payload['bmi'] ?? 0)
@@ -637,7 +687,7 @@ class PdhApiService {
     private function getMockTodayVisits(): array {
         $pdo = Database::getConnection();
         $stmt = $pdo->query("
-            SELECT v.*, p.fullname, p.age, p.gender, p.cid,
+            SELECT v.*, p.fullname, p.age, p.gender, p.cid, p.phone,
                    n.naf_grade as last_naf_grade, n.assessment_date as last_naf_date
             FROM visits_cache v
             JOIN patients_cache p ON v.hn = p.hn

@@ -28,7 +28,7 @@ class PatientController {
                 $stmtP = $pdo->prepare("
                     INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, phone, synced_at)
                     VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :phone, NOW())
-                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), synced_at = NOW()
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), phone = VALUES(phone), synced_at = NOW()
                 ");
                 foreach ($gatewayRes['data'] as $gp) {
                     if (empty($gp['hn'])) continue;
@@ -38,6 +38,9 @@ class PatientController {
                     if (!empty($bdate) && $bdate !== '0000-00-00') {
                         $age = date_diff(date_create($bdate), date_create('today'))->y;
                     }
+                    $rawPhone = $gp['informtel'] ?? $gp['tel'] ?? $gp['phone'] ?? $gp['mobile'] ?? $gp['hometel'] ?? null;
+                    $phone    = PdhApiService::formatOrExtractPhone($rawPhone, $gp['hn']);
+
                     $stmtP->execute([
                         'hn'       => $gp['hn'],
                         'cid'      => $gp['cid'] ?? null,
@@ -45,7 +48,7 @@ class PatientController {
                         'gender'   => $gender,
                         'bdate'    => $bdate,
                         'age'      => $age,
-                        'phone'    => $gp['phone'] ?? null
+                        'phone'    => $phone
                     ]);
                 }
             }
@@ -74,12 +77,13 @@ class PatientController {
         $params = [];
 
         if (!empty($query)) {
-            $sql .= " AND (p.hn LIKE :q1 OR p.cid LIKE :q2 OR p.fullname LIKE :q3 OR v.clinic LIKE :q4)";
+            $sql .= " AND (p.hn LIKE :q1 OR p.cid LIKE :q2 OR p.fullname LIKE :q3 OR p.phone LIKE :q4 OR v.clinic LIKE :q5)";
             $qVal = "%{$query}%";
             $params['q1'] = $qVal;
             $params['q2'] = $qVal;
             $params['q3'] = $qVal;
             $params['q4'] = $qVal;
+            $params['q5'] = $qVal;
         }
 
         if ($typeFilter === 'OPD') {
