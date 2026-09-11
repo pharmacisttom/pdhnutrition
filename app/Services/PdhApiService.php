@@ -29,8 +29,9 @@ class PdhApiService {
     public function searchPatients(string $query): array {
         if ($this->driver === 'mock') {
             $pdo = Database::getConnection();
-            $stmt = $pdo->prepare("SELECT * FROM patients_cache WHERE hn LIKE :q OR cid LIKE :q OR fullname LIKE :q LIMIT 20");
-            $stmt->execute(['q' => "%{$query}%"]);
+            $stmt = $pdo->prepare("SELECT * FROM patients_cache WHERE hn LIKE :q1 OR cid LIKE :q2 OR fullname LIKE :q3 LIMIT 20");
+            $qVal = "%{$query}%";
+            $stmt->execute(['q1' => $qVal, 'q2' => $qVal, 'q3' => $qVal]);
             return [
                 'success' => true,
                 'is_cached' => false,

@@ -74,8 +74,12 @@ class PatientController {
         $params = [];
 
         if (!empty($query)) {
-            $sql .= " AND (p.hn LIKE :q OR p.cid LIKE :q OR p.fullname LIKE :q OR v.clinic LIKE :q)";
-            $params['q'] = "%{$query}%";
+            $sql .= " AND (p.hn LIKE :q1 OR p.cid LIKE :q2 OR p.fullname LIKE :q3 OR v.clinic LIKE :q4)";
+            $qVal = "%{$query}%";
+            $params['q1'] = $qVal;
+            $params['q2'] = $qVal;
+            $params['q3'] = $qVal;
+            $params['q4'] = $qVal;
         }
 
         if ($typeFilter === 'OPD') {
