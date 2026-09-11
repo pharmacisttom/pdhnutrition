@@ -133,6 +133,10 @@ assertTest("Report Service (Nutrition Outcomes Report)", is_array($outcomesRepor
 $heatmapMatrix = \App\Services\SmartAlertService::getHeatmapMatrix();
 assertTest("Clinical Risk Heatmap Matrix (DEFICIENCY & ELECTROLYTE Keys Exist)", isset($heatmapMatrix['DEFICIENCY']) && isset($heatmapMatrix['ELECTROLYTE']));
 
+// 22. Multi-Visit Historical Lab Matrix & Trend Graph Service Test
+$labHistRes = $api->getLabsHistory('66000101');
+assertTest("Multi-Visit Historical Lab Matrix & Trend Graph Data Retrieval", $labHistRes['success'] === true && !empty($labHistRes['data']['dates']) && !empty($labHistRes['data']['matrix']));
+
 echo "\n========================================================\n";
 echo "TEST RESULTS SUMMARY:\n";
 echo "PASSED: {$passCount} | FAILED: {$failCount}\n";

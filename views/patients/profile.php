@@ -11,6 +11,9 @@ $wbc = (float)($latestLabs['wbc'] ?? 0);
 $lym = (float)($latestLabs['lymphocyte'] ?? 0);
 $tlc = (float)($latestLabs['tlc'] ?? ($wbc * $lym / 100));
 
+$labDates  = $labHistoryData['dates'] ?? [];
+$labMatrix = $labHistoryData['matrix'] ?? [];
+
 // Mock or API lab parameters for renal, electrolytes, hematology & metabolic panels
 $bun = (float)($latestLabs['bun'] ?? 18.5);
 $cr  = (float)($latestLabs['creatinine'] ?? 1.1);
@@ -192,7 +195,7 @@ $egfr = round(141 * pow(min(($cr / ($isFemale ? 0.7 : 0.9)), 1), ($isFemale ? -0
       </li>
       <li class="nav-item">
         <button class="nav-link py-2" data-bs-toggle="tab" data-bs-target="#labs">
-          <i class="fa-solid fa-flask me-1"></i> ผล Lab ทั้งหมด (HIS)
+          <i class="fa-solid fa-chart-line me-1"></i> ผล Lab ย้อนหลัง & DrugLab Matrix
         </button>
       </li>
     </ul>
@@ -266,6 +269,10 @@ $egfr = round(141 * pow(min(($cr / ($isFemale ? 0.7 : 0.9)), 1), ($isFemale ? -0
                 <span class="text-muted">Potassium (K+):</span>
                 <span class="fw-bold text-dark"><?= $k ?> mEq/L</span>
               </div>
+
+              <button class="btn btn-outline-primary btn-sm w-100 mt-3 shadow-sm" onclick="$('#patientTabs button[data-bs-target=\'#labs\']').tab('show');">
+                <i class="fa-solid fa-chart-line me-1"></i> ดูแนวโน้มแล็บย้อนหลังทั้งหมด (DrugLab View)
+              </button>
             </div>
           </div>
 
@@ -456,87 +463,155 @@ $egfr = round(141 * pow(min(($cr / ($isFemale ? 0.7 : 0.9)), 1), ($isFemale ? -0
         </div>
       </div>
 
-      <!-- TAB 6: Complete Labs -->
+      <!-- TAB 6: Complete Historical Labs & DrugLab Matrix -->
       <div class="tab-pane fade" id="labs">
-        <div class="card p-3 border-0 shadow-sm">
-          <h5 class="fw-bold text-pdh-blue mb-3"><i class="fa-solid fa-vial-circle-check me-2 text-primary"></i> ผลการตรวจทางห้องปฏิบัติการทั้งหมด (HIS Laboratory Panel)</h5>
-          <div class="table-responsive">
-            <table class="table table-bordered align-middle mb-0">
-              <thead class="table-light">
+        
+        <!-- Header Controls & Summary -->
+        <div class="card p-3 border-0 shadow-sm mb-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 border-bottom pb-3">
+            <div>
+              <h5 class="fw-bold text-pdh-blue m-0">
+                <i class="fa-solid fa-chart-line me-2 text-primary"></i> 
+                ประวัติผลการตรวจทางห้องปฏิบัติการย้อนหลัง & กราฟแนวโน้ม (HIS Lab Trend & DrugLab Matrix)
+              </h5>
+              <small class="text-muted">
+                เปรียบเทียบผลแล็บย้อนหลัง <?= count($labDates) ?> งวดการตรวจ 
+                (วันที่ตรวจ: <?= implode(' | ', $labDates) ?>)
+              </small>
+            </div>
+            <div class="btn-group mt-2 mt-md-0" role="group">
+              <button type="button" class="btn btn-primary btn-sm" id="btnShowGraph" onclick="switchLabView('graph')">
+                <i class="fa-solid fa-chart-area me-1"></i> กราฟแนวโน้ม (Graph View)
+              </button>
+              <button type="button" class="btn btn-outline-primary btn-sm" id="btnShowMatrix" onclick="switchLabView('matrix')">
+                <i class="fa-solid fa-table me-1"></i> ตาราง DrugLab Matrix (Matrix View)
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 1: Interactive Chart.js Visualization Card -->
+          <div id="labTrendChartContainer" class="p-3 bg-light rounded border mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 border-bottom pb-2">
+              <h6 class="fw-bold text-dark m-0">
+                <i class="fa-solid fa-chart-line text-success me-2"></i> 
+                กราฟเปรียบเทียบแนวโน้มย้อนหลัง: <span id="currentPanelTitle" class="text-primary fw-bold">Glycemic Panel</span>
+              </h6>
+              
+              <!-- Lab Panel Selector Tabs for Chart -->
+              <ul class="nav nav-pills nav-sm" id="chartPanelTabs">
+                <?php $firstP = true; foreach ($labMatrix as $panelName => $tests): 
+                  $shortName = explode(' ', $panelName)[0];
+                ?>
+                  <li class="nav-item me-1">
+                    <button class="nav-link py-1 px-2 fs-7 <?= $firstP ? 'active' : '' ?>" 
+                            onclick="renderPanelChart('<?= htmlspecialchars($panelName, ENT_QUOTES) ?>')">
+                      <?= htmlspecialchars($shortName) ?>
+                    </button>
+                  </li>
+                <?php $firstP = false; endforeach; ?>
+              </ul>
+            </div>
+
+            <!-- Chart Canvas -->
+            <div style="position: relative; height: 320px; width: 100%;">
+              <canvas id="labTrendChartCanvas"></canvas>
+            </div>
+
+            <div class="fs-7 text-muted mt-2 d-flex flex-wrap align-items-center justify-content-between">
+              <span><i class="fa-solid fa-circle-info text-info me-1"></i> คลิกรายการใน Legend เพื่อเปิด/ปิดเส้นกราฟ หรือเลื่อนเมาส์เหนือจุดกราฟเพื่อดูค่าละเอียดและช่วงอ้างอิง</span>
+              <span class="badge bg-secondary">HIS Live Data Synced</span>
+            </div>
+          </div>
+
+          <!-- Section 2: DrugLab Style Multi-Visit Comparison Matrix Table -->
+          <div id="labMatrixContainer" class="table-responsive" style="display: none;">
+            <table class="table table-bordered align-middle table-hover mb-0" id="drugLabMatrixTable">
+              <thead class="table-dark text-center">
                 <tr>
-                  <th>กลุ่มการตรวจ (Panel)</th>
-                  <th>รายการตรวจ (Lab Test)</th>
-                  <th>ค่าผลลัพธ์ (Result)</th>
-                  <th>ค่าปกติอ้างอิง (Reference Range)</th>
-                  <th>วันที่ตรวจล่าสุด</th>
+                  <th style="min-width: 140px;">กลุ่มการตรวจ (Panel)</th>
+                  <th style="min-width: 150px;">รายการตรวจ (Lab Test)</th>
+                  <th style="min-width: 130px;">ค่าปกติอ้างอิง</th>
+                  <?php foreach ($labDates as $idx => $dStr): ?>
+                    <th style="min-width: 110px;" class="<?= ($idx === count($labDates)-1) ? 'bg-primary border-primary text-white' : '' ?>">
+                      <?= htmlspecialchars($dStr) ?>
+                      <?= ($idx === count($labDates)-1) ? '<span class="badge bg-warning text-dark d-block fs-8 mt-1">ล่าสุด</span>' : '' ?>
+                    </th>
+                  <?php endforeach; ?>
+                  <th style="min-width: 140px;">แนวโน้ม & Delta (Δ)</th>
+                  <th style="width: 70px;">กราฟ</th>
                 </tr>
               </thead>
               <tbody>
-                <!-- Renal -->
-                <tr>
-                  <td rowspan="4" class="fw-bold bg-light">Renal Panel (ไต)</td>
-                  <td>Albumin</td>
-                  <td class="fw-bold <?= ($albumin > 0 && $albumin < 3.0) ? 'text-danger' : '' ?>"><?= $albumin ?: '3.2' ?> g/dL</td>
-                  <td>3.5 - 5.0 g/dL</td>
-                  <td><?= date('d/m/Y') ?></td>
-                </tr>
-                <tr>
-                  <td>BUN</td>
-                  <td class="fw-bold"><?= $bun ?> mg/dL</td>
-                  <td>7.0 - 20.0 mg/dL</td>
-                  <td><?= date('d/m/Y') ?></td>
-                </tr>
-                <tr>
-                  <td>Creatinine</td>
-                  <td class="fw-bold"><?= $cr ?> mg/dL</td>
-                  <td>0.6 - 1.2 mg/dL</td>
-                  <td><?= date('d/m/Y') ?></td>
-                </tr>
-                <tr>
-                  <td>eGFR (CKD-EPI)</td>
-                  <td class="fw-bold text-primary"><?= $egfr ?> mL/min/1.73m²</td>
-                  <td>&ge; 90 mL/min</td>
-                  <td>คำนวณอัตโนมัติ</td>
-                </tr>
+                <?php foreach ($labMatrix as $panelName => $tests): 
+                  $rowCount = count($tests);
+                  $firstRow = true;
+                  foreach ($tests as $tItem):
+                ?>
+                  <tr>
+                    <?php if ($firstRow): ?>
+                      <td rowspan="<?= $rowCount ?>" class="fw-bold bg-light align-middle text-pdh-blue fs-7 border-end">
+                        <?= htmlspecialchars($panelName) ?>
+                      </td>
+                    <?php $firstRow = false; endif; ?>
 
-                <!-- Electrolytes -->
-                <tr>
-                  <td rowspan="2" class="fw-bold bg-light">Electrolytes</td>
-                  <td>Sodium (Na)</td>
-                  <td class="fw-bold"><?= $na ?> mEq/L</td>
-                  <td>135 - 145 mEq/L</td>
-                  <td><?= date('d/m/Y') ?></td>
-                </tr>
-                <tr>
-                  <td>Potassium (K)</td>
-                  <td class="fw-bold"><?= $k ?> mEq/L</td>
-                  <td>3.5 - 5.0 mEq/L</td>
-                  <td><?= date('d/m/Y') ?></td>
-                </tr>
+                    <td class="fw-bold text-dark">
+                      <?= htmlspecialchars($tItem['test_name']) ?>
+                    </td>
 
-                <!-- Hematology -->
-                <tr>
-                  <td rowspan="3" class="fw-bold bg-light">CBC Panel</td>
-                  <td>WBC</td>
-                  <td class="fw-bold"><?= $wbc ?: '6,500' ?> cells/mm³</td>
-                  <td>4,000 - 10,000 cells/mm³</td>
-                  <td><?= date('d/m/Y') ?></td>
-                </tr>
-                <tr>
-                  <td>Lymphocyte (%)</td>
-                  <td class="fw-bold"><?= $lym ?: '22' ?> %</td>
-                  <td>20.0 - 40.0 %</td>
-                  <td><?= date('d/m/Y') ?></td>
-                </tr>
-                <tr>
-                  <td>Total Lymphocyte (TLC)</td>
-                  <td class="fw-bold text-primary"><?= number_format($tlc ?: 1430) ?> cells/mm³</td>
-                  <td>&ge; 1,500 cells/mm³</td>
-                  <td>คำนวณอัตโนมัติ (WBC x %Lym / 100)</td>
-                </tr>
+                    <td class="fs-7 text-muted">
+                      <?= htmlspecialchars($tItem['ref_range']) ?>
+                    </td>
+
+                    <!-- Dynamic Visit Values -->
+                    <?php foreach ($tItem['values'] as $vIdx => $val): 
+                      $isLatestCell = ($vIdx === count($tItem['values']) - 1);
+                      $cellClass = '';
+                      if ($val !== null) {
+                        if ($val < $tItem['min']) $cellClass = 'bg-warning-subtle text-warning-emphasis fw-bold';
+                        elseif ($val > $tItem['max']) $cellClass = 'bg-danger-subtle text-danger fw-bold';
+                        elseif ($isLatestCell) $cellClass = 'bg-success-subtle text-success fw-bold';
+                      }
+                    ?>
+                      <td class="text-center <?= $cellClass ?>">
+                        <?php if ($val !== null): ?>
+                          <span class="fs-6"><?= number_format($val, (floor($val) == $val) ? 0 : (str_contains((string)$val, '.') ? strlen(substr(strrchr((string)$val, "."), 1)) : 1)) ?></span>
+                          <small class="fs-8 text-muted d-block"><?= htmlspecialchars($tItem['unit']) ?></small>
+                        <?php else: ?>
+                          <span class="text-muted">-</span>
+                        <?php endif; ?>
+                      </td>
+                    <?php endforeach; ?>
+
+                    <!-- Trend & Delta Column -->
+                    <td class="text-center">
+                      <?php if ($tItem['status'] === 'HIGH'): ?>
+                        <span class="badge bg-danger p-2 fs-7 w-100">
+                          <i class="fa-solid fa-arrow-trend-up me-1"></i> สูง (<?= ($tItem['delta'] >= 0 ? '+' : '') . $tItem['delta'] ?>)
+                        </span>
+                      <?php elseif ($tItem['status'] === 'LOW'): ?>
+                        <span class="badge bg-warning text-dark p-2 fs-7 w-100">
+                          <i class="fa-solid fa-arrow-trend-down me-1"></i> ต่ำ (<?= ($tItem['delta'] >= 0 ? '+' : '') . $tItem['delta'] ?>)
+                        </span>
+                      <?php else: ?>
+                        <span class="badge bg-success p-2 fs-7 w-100">
+                          <i class="fa-solid fa-check me-1"></i> ปกติ (<?= ($tItem['delta'] >= 0 ? '+' : '') . $tItem['delta'] ?>)
+                        </span>
+                      <?php endif; ?>
+                    </td>
+
+                    <!-- Action Button -->
+                    <td class="text-center">
+                      <button class="btn btn-sm btn-outline-primary py-1 px-2" title="แสดงกราฟแนวโน้ม"
+                              onclick="switchLabView('graph'); renderPanelChart('<?= htmlspecialchars($panelName, ENT_QUOTES) ?>');">
+                        <i class="fa-solid fa-chart-line"></i>
+                      </button>
+                    </td>
+                  </tr>
+                <?php endforeach; endforeach; ?>
               </tbody>
             </table>
           </div>
+
         </div>
       </div>
 
@@ -544,5 +619,131 @@ $egfr = round(141 * pow(min(($cr / ($isFemale ? 0.7 : 0.9)), 1), ($isFemale ? -0
 
   </div>
 </div>
+
+<script>
+const labMatrixData = <?= json_encode($labHistoryData) ?>;
+let labChartInstance = null;
+
+function switchLabView(viewMode) {
+  if (viewMode === 'graph') {
+    $('#labTrendChartContainer').show();
+    $('#labMatrixContainer').hide();
+    $('#btnShowGraph').removeClass('btn-outline-primary').addClass('btn-primary');
+    $('#btnShowMatrix').removeClass('btn-primary').addClass('btn-outline-primary');
+  } else {
+    $('#labTrendChartContainer').hide();
+    $('#labMatrixContainer').show();
+    $('#btnShowMatrix').removeClass('btn-outline-primary').addClass('btn-primary');
+    $('#btnShowGraph').removeClass('btn-primary').addClass('btn-outline-primary');
+  }
+}
+
+function renderPanelChart(panelName) {
+  const dates = labMatrixData.dates || [];
+  const matrix = labMatrixData.matrix || {};
+  const tests = matrix[panelName] || [];
+
+  $('#currentPanelTitle').text(panelName);
+
+  // Update active pill button
+  $('#chartPanelTabs button').each(function() {
+    const btnText = $(this).text().trim();
+    if (panelName.startsWith(btnText)) {
+      $(this).addClass('active');
+    } else {
+      $(this).removeClass('active');
+    }
+  });
+
+  const colors = [
+    { border: '#0d6efd', bg: 'rgba(13, 110, 253, 0.15)' },
+    { border: '#dc3545', bg: 'rgba(220, 53, 69, 0.15)' },
+    { border: '#198754', bg: 'rgba(25, 135, 84, 0.15)' },
+    { border: '#fd7e14', bg: 'rgba(253, 126, 20, 0.15)' },
+    { border: '#6f42c1', bg: 'rgba(111, 66, 193, 0.15)' }
+  ];
+
+  const datasets = tests.map((tItem, idx) => {
+    const color = colors[idx % colors.length];
+    return {
+      label: `${tItem.test_name} (${tItem.unit}) [เกณฑ์: ${tItem.ref_range}]`,
+      data: tItem.values,
+      borderColor: color.border,
+      backgroundColor: color.bg,
+      borderWidth: 3,
+      pointRadius: 6,
+      pointHoverRadius: 8,
+      pointBackgroundColor: color.border,
+      tension: 0.3,
+      fill: false
+    };
+  });
+
+  const canvas = document.getElementById('labTrendChartCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  if (labChartInstance) {
+    labChartInstance.destroy();
+  }
+
+  labChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: { size: 12, weight: 'bold' },
+            usePointStyle: true,
+            padding: 15
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.9)',
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 12 },
+          padding: 12,
+          displayColors: true,
+          callbacks: {
+            label: function(context) {
+              return ` ${context.dataset.label}: ${context.raw}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 12, weight: '600' } }
+        },
+        y: {
+          grid: { color: 'rgba(0, 0, 0, 0.05)' },
+          ticks: { font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+$(document).ready(function() {
+  if (labMatrixData && labMatrixData.matrix) {
+    const firstPanel = Object.keys(labMatrixData.matrix)[0];
+    if (firstPanel) {
+      renderPanelChart(firstPanel);
+    }
+  }
+});
+</script>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>

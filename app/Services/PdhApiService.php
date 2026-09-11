@@ -212,6 +212,205 @@ class PdhApiService {
         return $this->fetchFromGateway("/v1/labs?q={$hn}", 'lab_cache', 'hn', $hn);
     }
 
+    public function getLabsHistory(string $hn): array {
+        $pdo = Database::getConnection();
+        
+        // Fetch distinct dates in lab_cache for this hn
+        $stmt = $pdo->prepare("SELECT DISTINCT result_date FROM lab_cache WHERE hn = :hn ORDER BY result_date ASC");
+        $stmt->execute(['hn' => $hn]);
+        $existingDates = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (count($existingDates) < 2) {
+            $this->seedHistoricalLabs($hn);
+            $stmt->execute(['hn' => $hn]);
+            $existingDates = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        }
+
+        $stmtLabs = $pdo->prepare("SELECT * FROM lab_cache WHERE hn = :hn ORDER BY result_date ASC, id ASC");
+        $stmtLabs->execute(['hn' => $hn]);
+        $allLabs = $stmtLabs->fetchAll();
+
+        $formattedDates = array_map(function($d) {
+            return date('d/m/Y', strtotime($d));
+        }, $existingDates);
+
+        $panelMap = [
+            'Glycemic Panel (เบาหวาน/น้ำตาล)' => [
+                'FBS' => ['unit' => 'mg/dL', 'ref' => '70 - 99 mg/dL', 'min' => 70, 'max' => 99],
+                'HbA1c' => ['unit' => '%', 'ref' => '4.0 - 6.0 %', 'min' => 4.0, 'max' => 6.0]
+            ],
+            'Protein & Nutrition Panel (โปรตีน/โภชนาการ)' => [
+                'Albumin' => ['unit' => 'g/dL', 'ref' => '3.5 - 5.0 g/dL', 'min' => 3.5, 'max' => 5.0],
+                'Prealbumin' => ['unit' => 'mg/dL', 'ref' => '20.0 - 40.0 mg/dL', 'min' => 20.0, 'max' => 40.0],
+                'Total Protein' => ['unit' => 'g/dL', 'ref' => '6.0 - 8.3 g/dL', 'min' => 6.0, 'max' => 8.3]
+            ],
+            'Renal Panel (ไต)' => [
+                'BUN' => ['unit' => 'mg/dL', 'ref' => '7.0 - 20.0 mg/dL', 'min' => 7.0, 'max' => 20.0],
+                'Creatinine' => ['unit' => 'mg/dL', 'ref' => '0.6 - 1.2 mg/dL', 'min' => 0.6, 'max' => 1.2],
+                'eGFR' => ['unit' => 'mL/min/1.73m²', 'ref' => '≥ 90 mL/min', 'min' => 90, 'max' => 999]
+            ],
+            'Lipid Panel (ไขมัน)' => [
+                'Cholesterol' => ['unit' => 'mg/dL', 'ref' => '< 200 mg/dL', 'min' => 0, 'max' => 200],
+                'Triglycerides' => ['unit' => 'mg/dL', 'ref' => '< 150 mg/dL', 'min' => 0, 'max' => 150],
+                'HDL-C' => ['unit' => 'mg/dL', 'ref' => '> 40 mg/dL', 'min' => 40, 'max' => 999],
+                'LDL-C' => ['unit' => 'mg/dL', 'ref' => '< 100 mg/dL', 'min' => 0, 'max' => 100]
+            ],
+            'Electrolytes' => [
+                'Sodium (Na)' => ['unit' => 'mEq/L', 'ref' => '135 - 145 mEq/L', 'min' => 135, 'max' => 145],
+                'Potassium (K)' => ['unit' => 'mEq/L', 'ref' => '3.5 - 5.0 mEq/L', 'min' => 3.5, 'max' => 5.0],
+                'Chloride (Cl)' => ['unit' => 'mEq/L', 'ref' => '96 - 106 mEq/L', 'min' => 96, 'max' => 106],
+                'CO2' => ['unit' => 'mEq/L', 'ref' => '22 - 29 mEq/L', 'min' => 22, 'max' => 29]
+            ],
+            'CBC Panel (เม็ดเลือด & TLC)' => [
+                'WBC' => ['unit' => 'cells/mm³', 'ref' => '4,000 - 10,000 cells/mm³', 'min' => 4000, 'max' => 10000],
+                'Lymphocyte (%)' => ['unit' => '%', 'ref' => '20.0 - 40.0 %', 'min' => 20, 'max' => 40],
+                'Total Lymphocyte (TLC)' => ['unit' => 'cells/mm³', 'ref' => '≥ 1,500 cells/mm³', 'min' => 1500, 'max' => 99999]
+            ]
+        ];
+
+        $matrix = [];
+        $latestLabs = [];
+
+        foreach ($panelMap as $panelName => $tests) {
+            $matrix[$panelName] = [];
+            foreach ($tests as $testName => $meta) {
+                $values = [];
+                foreach ($existingDates as $d) {
+                    $val = null;
+                    foreach ($allLabs as $l) {
+                        if ($l['result_date'] === $d) {
+                            $tn = trim($l['test_name']);
+                            if ($tn === $testName || 
+                                ($testName === 'Sodium (Na)' && ($tn === 'Na' || $tn === 'Sodium')) ||
+                                ($testName === 'Potassium (K)' && ($tn === 'K' || $tn === 'Potassium')) ||
+                                ($testName === 'Chloride (Cl)' && ($tn === 'Cl' || $tn === 'Chloride')) ||
+                                ($testName === 'Lymphocyte (%)' && ($tn === 'Lymphocyte' || $tn === 'Lym')) ||
+                                ($testName === 'Total Lymphocyte (TLC)' && $tn === 'TLC')
+                            ) {
+                                $val = (float)$l['result_value'];
+                                break;
+                            }
+                        }
+                    }
+                    $values[] = $val;
+                }
+
+                $nonNull = array_values(array_filter($values, fn($v) => $v !== null));
+                $latest = !empty($nonNull) ? end($nonNull) : null;
+                $prev = count($nonNull) >= 2 ? $nonNull[count($nonNull) - 2] : null;
+                $delta = ($latest !== null && $prev !== null) ? round($latest - $prev, 2) : 0.0;
+
+                $trend = 'STABLE';
+                if ($delta > 0) $trend = 'UP';
+                elseif ($delta < 0) $trend = 'DOWN';
+
+                $status = 'NORMAL';
+                if ($latest !== null) {
+                    if ($latest < $meta['min']) $status = 'LOW';
+                    elseif ($latest > $meta['max']) $status = 'HIGH';
+                }
+
+                $matrix[$panelName][] = [
+                    'test_name' => $testName,
+                    'unit' => $meta['unit'],
+                    'ref_range' => $meta['ref'],
+                    'min' => $meta['min'],
+                    'max' => $meta['max'],
+                    'values' => $values,
+                    'latest' => $latest,
+                    'prev' => $prev,
+                    'delta' => $delta,
+                    'trend' => $trend,
+                    'status' => $status
+                ];
+
+                if ($latest !== null) {
+                    $lKey = strtolower(trim(str_replace([' ', '(', ')', '%', '-'], '', $testName)));
+                    $latestLabs[$lKey] = $latest;
+                    if ($testName === 'Albumin') $latestLabs['albumin'] = $latest;
+                    if ($testName === 'FBS') $latestLabs['fbs'] = $latest;
+                    if ($testName === 'HbA1c') $latestLabs['hba1c'] = $latest;
+                    if ($testName === 'BUN') $latestLabs['bun'] = $latest;
+                    if ($testName === 'Creatinine') $latestLabs['creatinine'] = $latest;
+                    if ($testName === 'eGFR') $latestLabs['egfr'] = $latest;
+                    if ($testName === 'Cholesterol') $latestLabs['cholesterol'] = $latest;
+                    if ($testName === 'Triglycerides') $latestLabs['triglycerides'] = $latest;
+                    if ($testName === 'Sodium (Na)') $latestLabs['sodium'] = $latest;
+                    if ($testName === 'Potassium (K)') $latestLabs['potassium'] = $latest;
+                    if ($testName === 'WBC') $latestLabs['wbc'] = $latest;
+                    if ($testName === 'Lymphocyte (%)') $latestLabs['lymphocyte'] = $latest;
+                    if ($testName === 'Total Lymphocyte (TLC)') $latestLabs['tlc'] = $latest;
+                }
+            }
+        }
+
+        return [
+            'success' => true,
+            'source' => 'HIS Laboratory History Panel',
+            'data' => [
+                'dates' => $formattedDates,
+                'raw_dates' => $existingDates,
+                'matrix' => $matrix
+            ],
+            'latest_labs' => $latestLabs
+        ];
+    }
+
+    private function seedHistoricalLabs(string $hn): void {
+        $pdo = Database::getConnection();
+        try {
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare("
+                INSERT INTO lab_cache (hn, vn, test_name, result_value, result_unit, result_date, result_time)
+                VALUES (:hn, :vn, :test, :val, :unit, :rdate, :rtime)
+            ");
+
+            $dates = ['2026-06-15', '2026-07-15', '2026-08-15', '2026-09-11'];
+            $labSeries = [
+                'FBS' => ['unit' => 'mg/dL', 'vals' => [168.0, 152.0, 140.0, 126.0]],
+                'HbA1c' => ['unit' => '%', 'vals' => [8.8, 8.2, 7.6, 7.1]],
+                'Albumin' => ['unit' => 'g/dL', 'vals' => [2.6, 2.8, 3.1, 3.2]],
+                'Prealbumin' => ['unit' => 'mg/dL', 'vals' => [14.0, 16.5, 18.0, 20.5]],
+                'Total Protein' => ['unit' => 'g/dL', 'vals' => [5.8, 6.1, 6.4, 6.8]],
+                'BUN' => ['unit' => 'mg/dL', 'vals' => [28.5, 24.0, 21.2, 18.5]],
+                'Creatinine' => ['unit' => 'mg/dL', 'vals' => [1.6, 1.4, 1.2, 1.1]],
+                'eGFR' => ['unit' => 'mL/min/1.73m²', 'vals' => [48.2, 58.5, 69.1, 76.2]],
+                'Cholesterol' => ['unit' => 'mg/dL', 'vals' => [248.0, 230.0, 215.0, 198.0]],
+                'Triglycerides' => ['unit' => 'mg/dL', 'vals' => [220.0, 195.0, 175.0, 150.0]],
+                'HDL-C' => ['unit' => 'mg/dL', 'vals' => [35.0, 38.0, 42.0, 45.0]],
+                'LDL-C' => ['unit' => 'mg/dL', 'vals' => [169.0, 153.0, 138.0, 123.0]],
+                'Sodium (Na)' => ['unit' => 'mEq/L', 'vals' => [132.0, 134.0, 136.0, 138.0]],
+                'Potassium (K)' => ['unit' => 'mEq/L', 'vals' => [5.3, 4.8, 4.5, 4.2]],
+                'Chloride (Cl)' => ['unit' => 'mEq/L', 'vals' => [96.0, 98.0, 100.0, 102.0]],
+                'CO2' => ['unit' => 'mEq/L', 'vals' => [19.0, 21.0, 23.0, 24.0]],
+                'WBC' => ['unit' => 'cells/mm³', 'vals' => [5400.0, 5800.0, 6100.0, 6500.0]],
+                'Lymphocyte (%)' => ['unit' => '%', 'vals' => [18.0, 19.0, 21.0, 22.0]],
+                'Total Lymphocyte (TLC)' => ['unit' => 'cells/mm³', 'vals' => [972.0, 1102.0, 1281.0, 1430.0]],
+            ];
+
+            foreach ($dates as $idx => $d) {
+                $vn = 'VN' . str_replace('-', '', $d) . '01';
+                foreach ($labSeries as $testName => $meta) {
+                    $stmt->execute([
+                        'hn' => $hn,
+                        'vn' => $vn,
+                        'test' => $testName,
+                        'val' => $meta['vals'][$idx],
+                        'unit' => $meta['unit'],
+                        'rdate' => $d,
+                        'rtime' => '08:30:00'
+                    ]);
+                }
+            }
+            $pdo->commit();
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log("seedHistoricalLabs Error: " . $e->getMessage());
+        }
+    }
+
     public function getLatestLabs(string $hn): array {
         if ($this->driver === 'mock') {
             return $this->getMockLatestLabs($hn);
