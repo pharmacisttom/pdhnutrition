@@ -17,12 +17,11 @@ INSERT INTO `roles` (`role_code`, `role_name_th`, `description`) VALUES
 ON DUPLICATE KEY UPDATE `role_name_th` = VALUES(`role_name_th`);
 
 -- 2. Insert Default Users (password: "password123")
--- Hash string for "password123" is $2y$10$45z23yG./vjK15K.b/E3/O/R7q4YJ1uN7.B5Y1H03zW
 INSERT INTO `users` (`id`, `username`, `password_hash`, `fullname`, `email`, `role`, `status`) VALUES
-(1, 'admin', '$2y$10$eD4vjZf2VqUe7CgZtBvj5eF5p.F9J1H03zW2v.1234567890abc', 'ผู้ดูแลระบบ ปลวกแดง', 'admin@pluakdaeng.go.th', 'ADMIN', 'ACTIVE'),
-(2, 'dietitian1', '$2y$10$eD4vjZf2VqUe7CgZtBvj5eF5p.F9J1H03zW2v.1234567890abc', 'นักโภชนาการ สมศรี มีสุข (ภน.)', 'dietitian@pluakdaeng.go.th', 'DIETITIAN', 'ACTIVE'),
-(3, 'doctor1', '$2y$10$eD4vjZf2VqUe7CgZtBvj5eF5p.F9J1H03zW2v.1234567890abc', 'นพ. สมชาย ใจดี', 'doctor@pluakdaeng.go.th', 'DOCTOR', 'ACTIVE'),
-(4, 'nurse1', '$2y$10$eD4vjZf2VqUe7CgZtBvj5eF5p.F9J1H03zW2v.1234567890abc', 'พว. สายฝน ห่วงใย', 'nurse@pluakdaeng.go.th', 'NURSE', 'ACTIVE')
+(1, 'admin', '$2y$10$QNLsf3Dv92ZidgozkY7FIeuzEqdYKN8t1q/5H/Arv0WegqQh40mVu', 'ผู้ดูแลระบบ ปลวกแดง', 'admin@pluakdaeng.go.th', 'ADMIN', 'ACTIVE'),
+(2, 'dietitian1', '$2y$10$QNLsf3Dv92ZidgozkY7FIeuzEqdYKN8t1q/5H/Arv0WegqQh40mVu', 'นักโภชนาการ สมศรี มีสุข (ภน.)', 'dietitian@pluakdaeng.go.th', 'DIETITIAN', 'ACTIVE'),
+(3, 'doctor1', '$2y$10$QNLsf3Dv92ZidgozkY7FIeuzEqdYKN8t1q/5H/Arv0WegqQh40mVu', 'นพ. สมชาย ใจดี', 'doctor@pluakdaeng.go.th', 'DOCTOR', 'ACTIVE'),
+(4, 'nurse1', '$2y$10$QNLsf3Dv92ZidgozkY7FIeuzEqdYKN8t1q/5H/Arv0WegqQh40mVu', 'พว. สายฝน ห่วงใย', 'nurse@pluakdaeng.go.th', 'NURSE', 'ACTIVE')
 ON DUPLICATE KEY UPDATE `fullname` = VALUES(`fullname`);
 
 -- 3. NAF Rules Engine Data (Version 1)

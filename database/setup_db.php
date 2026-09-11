@@ -31,6 +31,35 @@ $dbPass   = $_ENV['DB_PASSWORD'] ?? '';
 
 echo "Connecting to $dbDriver host [$dbHost]...\n";
 
+function executeSqlScript(PDO $pdo, string $filePath, bool $isSqlite = false): void {
+    $rawSql = file_get_contents($filePath);
+    if ($isSqlite) {
+        $rawSql = str_replace(['AUTO_INCREMENT PRIMARY KEY', 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;', 'DATETIME NULL ON UPDATE CURRENT_TIMESTAMP'], ['PRIMARY KEY AUTOINCREMENT', ';', 'DATETIME NULL'], $rawSql);
+    }
+    
+    // Remove multi-line comments and single-line comments
+    $lines = explode("\n", $rawSql);
+    $cleanedSql = '';
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '' || strpos($trimmed, '--') === 0 || strpos($trimmed, 'USE ') === 0) {
+            continue;
+        }
+        $cleanedSql .= $line . "\n";
+    }
+
+    $statements = array_filter(array_map('trim', explode(';', $cleanedSql)));
+    foreach ($statements as $stmt) {
+        if (!empty($stmt)) {
+            try {
+                $pdo->exec($stmt);
+            } catch (Exception $e) {
+                echo "Warning executing statement: " . substr($stmt, 0, 50) . "... Error: " . $e->getMessage() . "\n";
+            }
+        }
+    }
+}
+
 try {
     if ($dbDriver === 'sqlite') {
         $dbPath = __DIR__ . '/../storage/' . $dbName . '.sqlite';
@@ -41,14 +70,14 @@ try {
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         echo "Connected to SQLite database file [$dbPath] successfully.\n";
     } else {
-        // First connect without DB name to create DB
+        // Connect to MySQL server
         $pdoServer = new PDO("mysql:host=$dbHost;port=$dbPort;charset=utf8mb4", $dbUser, $dbPass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
         $pdoServer->exec("CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         echo "Database `$dbName` verified/created successfully.\n";
 
-        // Connect to the specific DB
+        // Connect to the target DB
         $pdo = new PDO("mysql:host=$dbHost;port=$dbPort;dbname=$dbName;charset=utf8mb4", $dbUser, $dbPass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
@@ -57,41 +86,15 @@ try {
 
     // Run Schema SQL
     echo "Executing schema.sql...\n";
-    $schemaSql = file_get_contents(__DIR__ . '/schema.sql');
-    if ($dbDriver === 'sqlite') {
-        // Strip MySQL specific syntax if SQLite
-        $schemaSql = str_replace(['AUTO_INCREMENT PRIMARY KEY', 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;', 'DATETIME NULL ON UPDATE CURRENT_TIMESTAMP'], ['PRIMARY KEY AUTOINCREMENT', ';', 'DATETIME NULL'], $schemaSql);
-    }
-    
-    $statements = array_filter(array_map('trim', explode(';', $schemaSql)));
-    foreach ($statements as $stmt) {
-        if (!empty($stmt) && strpos($stmt, '--') !== 0) {
-            try {
-                $pdo->exec($stmt);
-            } catch (Exception $e) {
-                // Ignore drop table errors if not exists
-            }
-        }
-    }
-    echo "Schema created successfully.\n";
+    executeSqlScript($pdo, __DIR__ . '/schema.sql', $dbDriver === 'sqlite');
+    echo "Schema executed.\n";
 
     // Run Seeders SQL
     echo "Executing seeders.sql...\n";
-    $seedersSql = file_get_contents(__DIR__ . '/seeders.sql');
-    $seederStatements = array_filter(array_map('trim', explode(';', $seedersSql)));
-    foreach ($seederStatements as $stmt) {
-        if (!empty($stmt) && strpos($stmt, '--') !== 0 && strpos($stmt, 'USE ') !== 0) {
-            try {
-                $pdo->exec($stmt);
-            } catch (Exception $e) {
-                echo "Warning on seeder statement: " . $e->getMessage() . "\n";
-            }
-        }
-    }
-    echo "Seeders executed successfully.\n";
+    executeSqlScript($pdo, __DIR__ . '/seeders.sql', $dbDriver === 'sqlite');
+    echo "Seeders executed.\n";
     echo "\nSetup completed successfully!\n";
 
 } catch (PDOException $e) {
     echo "ERROR: Database setup failed: " . $e->getMessage() . "\n";
-    echo "Note: If MySQL server is not running on XAMPP, please start MySQL service in XAMPP Control Panel.\n";
 }
