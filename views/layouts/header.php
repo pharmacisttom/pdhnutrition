@@ -1,6 +1,7 @@
 <?php
 use App\Config\AppConfig;
-$baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
+$baseUrl = AppConfig::routeBase();
+$assetUrl = AppConfig::get('APP_URL', '/pdhnutrition');
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -21,8 +22,8 @@ $baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
   
   <!-- Custom Application Styles -->
-  <link href="<?= $baseUrl ?>/public/assets/css/custom.css" rel="stylesheet">
-  <link href="<?= $baseUrl ?>/public/assets/css/print.css" rel="stylesheet" media="print">
+  <link href="<?= $assetUrl ?>/public/assets/css/custom.css" rel="stylesheet">
+  <link href="<?= $assetUrl ?>/public/assets/css/print.css" rel="stylesheet" media="print">
 </head>
 <body class="bg-light">
 <div class="d-flex" id="wrapper">

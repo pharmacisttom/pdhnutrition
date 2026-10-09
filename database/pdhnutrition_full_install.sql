@@ -394,9 +394,9 @@ INSERT INTO `roles` (`role_code`, `role_name_th`, `description`) VALUES
 ('VIEWER', 'ผู้ดูข้อมูล', 'สิทธิ์อ่านอย่างเดียว')
 ON DUPLICATE KEY UPDATE `role_name_th` = VALUES(`role_name_th`);
 
--- Default Users (password: password123)
+-- Default Users (admin password: pdh10832, others: password123)
 INSERT INTO `users` (`id`, `username`, `password_hash`, `fullname`, `email`, `role`, `status`) VALUES
-(1, 'admin', '$2y$10$QNLsf3Dv92ZidgozkY7FIeuzEqdYKN8t1q/5H/Arv0WegqQh40mVu', 'ผู้ดูแลระบบ ปลวกแดง', 'admin@pluakdaeng.go.th', 'ADMIN', 'ACTIVE'),
+(1, 'admin', '$2y$10$FiYC21DBLHAHBOkIWxOZjem6VZH7oG2XqHdiul2/hbZha0SMmu6RW', 'ผู้ดูแลระบบ ปลวกแดง', 'admin@pluakdaeng.go.th', 'ADMIN', 'ACTIVE'),
 (2, 'dietitian1', '$2y$10$QNLsf3Dv92ZidgozkY7FIeuzEqdYKN8t1q/5H/Arv0WegqQh40mVu', 'นักโภชนาการ สมศรี มีสุข (ภน.)', 'dietitian@pluakdaeng.go.th', 'DIETITIAN', 'ACTIVE'),
 (3, 'doctor1', '$2y$10$QNLsf3Dv92ZidgozkY7FIeuzEqdYKN8t1q/5H/Arv0WegqQh40mVu', 'นพ. สมชาย ใจดี', 'doctor@pluakdaeng.go.th', 'DOCTOR', 'ACTIVE'),
 (4, 'nurse1', '$2y$10$QNLsf3Dv92ZidgozkY7FIeuzEqdYKN8t1q/5H/Arv0WegqQh40mVu', 'พว. สายฝน ห่วงใย', 'nurse@pluakdaeng.go.th', 'NURSE', 'ACTIVE')

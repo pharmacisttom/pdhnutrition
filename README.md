@@ -49,7 +49,7 @@
 
 8. **Security, RBAC & Audit Trail**
    - ระบบสิทธิ์ 7 ระดับ: `SUPER_ADMIN`, `ADMIN`, `DIETITIAN`, `DOCTOR`, `NURSE`, `PHARMACIST`, `VIEWER`
-   - ป้องกันภัยคุกคาม: Session Timeout, Password Hashing (`password_hash`), CSRF Protection, XSS Protection, Masked CID (`1-2345-XXXXX-XX-X`)
+   - ป้องกันภัยคุกคาม: Session Timeout, Password Hashing (`password_hash`), CSRF Protection, XSS Protection, Formatted CID (`1-2345-67890-12-3`) สำหรับบุคลากรทางการแพทย์
    - **Audit Log System**: บันทึกทุกกิจกรรม (Login, View Patient, Create NAF, Create Diet Order, Export/Print Report) พร้อม IP Address และ User-Agent
 
 ---
@@ -107,7 +107,7 @@ php database/setup_db.php
 `http://localhost/pdhnutrition`
 
 **บัญชีผู้ใช้งานเริ่มต้นสำหรับทดสอบ (Test Accounts):**
-- **Admin**: Username `admin` | Password `password123`
+- **Admin**: Username `admin` | Password `pdh10832`
 - **Dietitian**: Username `dietitian1` | Password `password123`
 - **Doctor**: Username `doctor1` | Password `password123`
 - **Nurse**: Username `nurse1` | Password `password123`

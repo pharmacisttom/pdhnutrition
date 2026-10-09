@@ -36,6 +36,7 @@ use App\Helpers\DateHelper;
     <!-- Filter Form -->
     <div class="card p-3 mb-4 bg-white shadow-sm border-0 no-print">
       <form method="GET" class="row g-3">
+        <input type="hidden" name="route" value="<?= htmlspecialchars('/reports/' . $reportCode, ENT_QUOTES, 'UTF-8') ?>">
         <div class="col-md-3">
           <label class="form-label fw-bold">เลือกวันที่</label>
           <input type="date" name="date" class="form-control" value="<?= htmlspecialchars($date) ?>" onchange="this.form.submit()">

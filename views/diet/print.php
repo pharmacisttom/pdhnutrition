@@ -9,7 +9,7 @@ use App\Helpers\SanitizerHelper;
   <title>Guide to Make Diet Order - โรงพยาบาลปลวกแดง</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="<?= $baseUrl ?>/public/assets/css/print.css" rel="stylesheet">
+  <link href="<?= $assetUrl ?>/public/assets/css/print.css" rel="stylesheet">
   <style>
     body { font-family: 'Sarabun', sans-serif; font-size: 10pt; color: #000; background: #fff; }
     .diet-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9.5pt; }

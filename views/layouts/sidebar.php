@@ -1,12 +1,14 @@
 <?php
 use App\Config\AppConfig;
-$baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
+$baseUrl = AppConfig::routeBase();
+$assetUrl = AppConfig::get('APP_URL', '/pdhnutrition');
 $currentRole = $_SESSION['user_role'] ?? 'VIEWER';
 ?>
 <!-- Sidebar -->
-<div class="bg-pdh-blue border-end no-print" id="sidebar-wrapper" style="min-width: 250px; max-width: 250px; min-height: 100vh;">
+<div class="bg-pdh-blue border-end no-print" id="sidebar-wrapper" aria-label="เมนูหลัก">
+  <button type="button" id="sidebar-close" class="btn btn-outline-light sidebar-close" aria-label="ปิดเมนู"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
   <div class="sidebar-heading text-white fw-bold py-3 px-3 border-bottom fs-5 d-flex align-items-center">
-    <img src="<?= $baseUrl ?>/public/assets/img/logo.png" alt="PDH Nutrition Logo" style="height: 45px; width: 45px; border-radius: 50%; object-fit: cover;" class="me-2 shadow-sm">
+    <img src="<?= $assetUrl ?>/public/assets/img/logo.png" alt="PDH Nutrition Logo" style="height: 45px; width: 45px; border-radius: 50%; object-fit: cover;" class="me-2 shadow-sm">
     <div>
       <div>PDH Nutrition</div>
       <small class="fw-normal text-white-50 fs-6">รพ.ปลวกแดง</small>
@@ -47,6 +49,10 @@ $currentRole = $_SESSION['user_role'] ?? 'VIEWER';
       <i class="fa-solid fa-file-invoice me-2 text-info"></i> รายงานโภชนาการ (13)
     </a>
 
+    <a href="<?= $baseUrl ?>/manual" class="list-group-item list-group-item-action bg-transparent text-white border-0 py-2 px-3 hover-bg text-info fw-bold">
+      <i class="fa-solid fa-book-open me-2"></i> คู่มือการใช้งานระบบ
+    </a>
+
     <?php if (in_array($currentRole, ['SUPER_ADMIN', 'ADMIN'])): ?>
       <div class="sidebar-heading text-white-50 text-uppercase px-3 pt-3 pb-1 fs-7">Administration</div>
       
@@ -71,5 +77,6 @@ $currentRole = $_SESSION['user_role'] ?? 'VIEWER';
   <div class="mt-auto p-3 text-white-50 fs-7 border-top border-secondary">
     <div>PDH Nutrition v1.0</div>
     <div>โรงพยาบาลปลวกแดง</div>
+    <div class="text-warning mt-1"><i class="fa-solid fa-code me-1"></i> พัฒนาโดย: <strong>tomvis</strong></div>
   </div>
 </div>

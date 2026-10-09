@@ -2,14 +2,15 @@
 /**
  * PDH Nutrition System - Global Configuration File
  * Pluakdaeng Hospital Clinical Nutrition Management System
- * Supports both XAMPP Localhost and Intranet Server (192.168.111.240)
+ * Matches exact PDHTelemed / PDHTawan Database Connection Schema
  */
 
-$serverHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$serverIp   = $_SERVER['SERVER_ADDR'] ?? '127.0.0.1';
+$serverIps = ['192.168.111.240'];
+$currentHost = $_SERVER['HTTP_HOST'] ?? '';
+$currentServerAddr = $_SERVER['SERVER_ADDR'] ?? ($_SERVER['LOCAL_ADDR'] ?? '');
+$isServer = in_array($currentServerAddr, $serverIps, true) || strpos($currentHost, '192.168.111.240') === 0;
 
-// Auto-detect environment based on Host Header or Server IP
-if (strpos($serverHost, '192.168.111.240') !== false || $serverIp === '192.168.111.240') {
+if ($isServer) {
     // ========================================================
     // Intranet Server Environment (192.168.111.240)
     // ========================================================
@@ -18,20 +19,21 @@ if (strpos($serverHost, '192.168.111.240') !== false || $serverIp === '192.168.1
     defined('DB_HOST') || define('DB_HOST', 'localhost');
     defined('DB_PORT') || define('DB_PORT', '3306');
     defined('DB_NAME') || define('DB_NAME', 'pdhnutrition');
-    defined('DB_USER') || define('DB_USER', 'root');
-    defined('DB_PASS') || define('DB_PASS', '');
+    defined('DB_USER') || define('DB_USER', 'webtomdb');
+    defined('DB_PASS') || define('DB_PASS', '@TOM$DataBase10832');
     defined('HIS_DRIVER') || define('HIS_DRIVER', 'himpro');
 } else {
     // ========================================================
     // Local Development Environment (XAMPP Localhost)
+    // Connects to Server 240 DB via 'tomwebdbnavicat'
     // ========================================================
     defined('APP_ENV') || define('APP_ENV', 'development');
     defined('APP_URL') || define('APP_URL', 'http://localhost/pdhnutrition');
-    defined('DB_HOST') || define('DB_HOST', 'localhost');
+    defined('DB_HOST') || define('DB_HOST', '192.168.111.240');
     defined('DB_PORT') || define('DB_PORT', '3306');
-    defined('DB_NAME') || define('DB_NAME', 'pdhnutrition_dev');
-    defined('DB_USER') || define('DB_USER', 'root');
-    defined('DB_PASS') || define('DB_PASS', '');
+    defined('DB_NAME') || define('DB_NAME', 'pdhnutrition');
+    defined('DB_USER') || define('DB_USER', 'tomwebdbnavicat');
+    defined('DB_PASS') || define('DB_PASS', '@TOM$NavicatDB10832');
     defined('HIS_DRIVER') || define('HIS_DRIVER', 'himpro');
 }
 

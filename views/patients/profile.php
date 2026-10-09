@@ -60,13 +60,13 @@ $egfr = round(141 * pow(min(($cr / ($isFemale ? 0.7 : 0.9)), 1), ($isFemale ? -0
         </div>
 
         <div class="mt-3 mt-md-0 d-flex flex-wrap gap-2">
-          <a href="<?= $baseUrl ?>/naf/create?hn=<?= $patient['hn'] ?>" class="btn btn-success btn-lg fw-bold shadow-sm">
+          <a href="<?= $baseUrl ?>/naf/create&hn=<?= $patient['hn'] ?>" class="btn btn-success btn-lg fw-bold shadow-sm">
             <i class="fa-solid fa-clipboard-check me-1"></i> ประเมิน NAF ใหม่
           </a>
-          <a href="<?= $baseUrl ?>/diet/create?hn=<?= $patient['hn'] ?>" class="btn btn-warning btn-lg text-dark fw-bold shadow-sm">
+          <a href="<?= $baseUrl ?>/diet/create&hn=<?= $patient['hn'] ?>" class="btn btn-warning btn-lg text-dark fw-bold shadow-sm">
             <i class="fa-solid fa-utensils me-1"></i> สั่ง Diet Order
           </a>
-          <a href="<?= $baseUrl ?>/notes/create?hn=<?= $patient['hn'] ?>" class="btn btn-light btn-lg text-pdh-blue fw-bold shadow-sm">
+          <a href="<?= $baseUrl ?>/notes/create&hn=<?= $patient['hn'] ?>" class="btn btn-light btn-lg text-pdh-blue fw-bold shadow-sm">
             <i class="fa-solid fa-notes-medical me-1"></i> เขียน SOAP Note
           </a>
         </div>

@@ -26,13 +26,34 @@ class PatientController {
             $gatewayRes = $api->searchPatients($query);
             if (!empty($gatewayRes['data']) && is_array($gatewayRes['data'])) {
                 $stmtP = $pdo->prepare("
-                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, phone, synced_at)
-                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :phone, NOW())
-                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), phone = VALUES(phone), synced_at = NOW()
+                    INSERT INTO patients_cache (hn, cid, prefix, first_name, last_name, fullname, gender, birthdate, age, phone, synced_at)
+                    VALUES (:hn, :cid, :prefix, :fname, :lname, :fullname, :gender, :bdate, :age, :phone, NOW())
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), gender = VALUES(gender), phone = VALUES(phone), synced_at = NOW()
                 ");
                 foreach ($gatewayRes['data'] as $gp) {
                     if (empty($gp['hn'])) continue;
-                    $gender = ($gp['sex_label'] ?? $gp['gender'] ?? '') === 'หญิง' ? 'หญิง' : 'ชาย';
+                    $prefix   = $gp['prefix'] ?? $gp['pname'] ?? '';
+                    $fname    = $gp['first_name'] ?? $gp['fname'] ?? '';
+                    $lname    = $gp['last_name'] ?? $gp['lname'] ?? '';
+                    $fullname = $gp['fullname'] ?? trim("{$prefix} {$fname} {$lname}");
+
+                    if (empty($fname) && !empty($fullname)) {
+                        $parts = preg_split('/\s+/', trim($fullname));
+                        if (count($parts) >= 3) {
+                            $prefix = $parts[0];
+                            $fname  = $parts[1];
+                            $lname  = implode(' ', array_slice($parts, 2));
+                        } elseif (count($parts) === 2) {
+                            $fname  = $parts[0];
+                            $lname  = $parts[1];
+                        } else {
+                            $fname  = $fullname;
+                        }
+                    }
+                    if (empty($fname)) $fname = 'ผู้ป่วย';
+                    if (empty($fullname)) $fullname = trim("{$prefix} {$fname} {$lname}");
+
+                    $gender = SanitizerHelper::normalizeGender($gp['sex_label'] ?? $gp['gender'] ?? $gp['sex'] ?? '');
                     $bdate  = $gp['birth_date'] ?? null;
                     $age    = 0;
                     if (!empty($bdate) && $bdate !== '0000-00-00') {
@@ -44,7 +65,10 @@ class PatientController {
                     $stmtP->execute([
                         'hn'       => $gp['hn'],
                         'cid'      => $gp['cid'] ?? null,
-                        'fullname' => $gp['fullname'] ?? ($gp['first_name'] . ' ' . $gp['last_name']),
+                        'prefix'   => $prefix,
+                        'fname'    => $fname,
+                        'lname'    => $lname,
+                        'fullname' => $fullname,
                         'gender'   => $gender,
                         'bdate'    => $bdate,
                         'age'      => $age,

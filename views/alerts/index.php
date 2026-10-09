@@ -207,7 +207,7 @@ function renderAlertTable($list, $baseUrl, $badgeType) { ?>
             </td>
 
             <td class="text-center">
-              <a href="<?= $baseUrl ?>/naf/create?hn=<?= $p['hn'] ?>" class="btn btn-sm btn-success fw-bold me-1">
+              <a href="<?= $baseUrl ?>/naf/create&hn=<?= $p['hn'] ?>" class="btn btn-sm btn-success fw-bold me-1">
                 <i class="fa-solid fa-clipboard-check me-1"></i> ประเมิน NAF
               </a>
               <a href="<?= $baseUrl ?>/patient/<?= htmlspecialchars($p['hn']) ?>" class="btn btn-sm btn-outline-primary">

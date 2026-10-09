@@ -92,7 +92,7 @@ class ClinicalNoteController {
         ResponseHelper::json([
             'success' => true,
             'message' => 'บันทึก Clinical Note (SOAP) สำเร็จ',
-            'redirect' => ($_ENV['APP_URL'] ?? '/pdhnutrition') . '/patient/' . $hn
+            'redirect' => \App\Config\AppConfig::routeBase() . '/patient/' . $hn
         ]);
     }
 }

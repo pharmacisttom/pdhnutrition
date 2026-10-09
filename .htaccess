@@ -8,5 +8,13 @@
     RewriteRule ^ - [L]
 
     # Route all other requests to index.php
-    RewriteRule ^(.*)$ index.php [QSA,L]
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Project-level fallback when mod_rewrite is unavailable.
+# Requires the server to permit .htaccess directives (AllowOverride).
+<IfModule !mod_rewrite.c>
+    <IfModule mod_dir.c>
+        FallbackResource /pdhnutrition/index.php
+    </IfModule>
 </IfModule>

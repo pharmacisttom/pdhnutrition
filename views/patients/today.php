@@ -40,6 +40,7 @@ foreach ($visits as $v) {
     <!-- Quick Search Box (Requirement 2: หาคนไข้ไม่เจอที่คลินิกอื่น) -->
     <div class="card p-3 shadow-sm border-0 mb-4 bg-white border-start border-primary border-4">
       <form method="GET" action="<?= $baseUrl ?>/patients/search" class="row g-2 align-items-center">
+        <input type="hidden" name="route" value="/patients/search">
         <div class="col-md-9">
           <div class="input-group">
             <span class="input-group-text bg-light text-pdh-blue"><i class="fa-solid fa-magnifying-glass"></i></span>
@@ -55,7 +56,7 @@ foreach ($visits as $v) {
     </div>
 
     <!-- Clinic Tabs (Requirement 1) -->
-    <ul class="nav nav-pills nav-fill fw-bold mb-3 bg-white p-2 rounded shadow-sm border" id="clinicTab" role="tablist">
+    <ul class="nav nav-pills d-flex flex-wrap gap-2 fw-bold mb-3 bg-white p-2 rounded shadow-sm border" id="clinicTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active py-2" id="tab-all" data-bs-toggle="tab" data-bs-target="#clinic-all" type="button">
           <i class="fa-solid fa-layer-group me-1"></i> แสดงทุกคลินิก (<?= count($visits) ?>)
@@ -152,7 +153,7 @@ function renderVisitTable($visitList, $baseUrl) { ?>
               <?php endif; ?>
             </td>
             <td class="text-center">
-              <a href="<?= $baseUrl ?>/naf/create?hn=<?= $v['hn'] ?? '' ?>&vn=<?= $v['vn'] ?? '' ?>" class="btn btn-sm btn-success me-1 fw-bold">
+              <a href="<?= $baseUrl ?>/naf/create&hn=<?= $v['hn'] ?? '' ?>&vn=<?= $v['vn'] ?? '' ?>" class="btn btn-sm btn-success me-1 fw-bold">
                 <i class="fa-solid fa-clipboard-check me-1"></i> เลือกประเมิน NAF
               </a>
               <a href="<?= $baseUrl ?>/patient/<?= htmlspecialchars($v['hn'] ?? '') ?>" class="btn btn-sm btn-outline-primary">

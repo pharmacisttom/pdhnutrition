@@ -3,6 +3,7 @@ namespace App\Services;
 
 use App\Config\AppConfig;
 use App\Config\Database;
+use App\Helpers\SanitizerHelper;
 use PDO;
 use Exception;
 
@@ -11,6 +12,121 @@ class PdhApiService {
     private string $baseUrl;
     private string $apiKey;
     private int $timeout;
+
+    public static array $realDoctors = [
+        'นพ.วิสุทธิพงศ์ เศวตประสาธน์',
+        'พญ.วิรัลพัชร มาศมหิศักดิ์',
+        'พญ.รุจยา สุริยะจันทร์',
+        'นพ.วรุตม์ บุญอำนวยกิจ',
+        'พญ.สุทิศา หอมขจร',
+        'นพ.ศุภกร ไชยการ',
+        'นพ.เฉลิมชัย ชุมแสงโชติสกุล',
+        'พญ.สินารักษ์ ศรีทองชัย',
+        'พญ.ปุณฑริกา พรรษคุณาฒัย',
+        'พญ.วาสินี เลขยานนท์',
+        'พญ.อริศรา ศิริรณรงค์',
+        'พญ.ธัญญาภรณ์ อุดมวงค์ยนต์',
+        'นพ.กษิดิ์เดช จงชนะถาวร',
+        'นพ.ณภัทร อภิญญาชน',
+        'นพ.ณัฐภัทร เทพเสน',
+        'นพ.พสธร บุญตั้งแต่ง',
+        'นพ.ภัทร แกน ลีละอมรวิเชษฐ์',
+        'นพ.เรืองยศ วนานันต์',
+        'พญ.วิชุดา โชควาณิชย์พงษ์',
+        'พญ.อภิชญา จิตรภักดี',
+        'พญ.ภูริชญา ภูริวัฒน์',
+        'พญ.นัทธ์หทัย สุวรรณพิทักษ์',
+        'นพ.เบญจ์ ธีรเวชญาณ',
+        'นพ.ธิติสรร สุทธิพงศ์',
+        'พญ.นภัสสร เทวารัณย์',
+        'พญ.ปภาดา รักษาสุข',
+        'พญ.ภาวินี บุญยศ',
+        'พญ.รุจิรา จิรจำเนียรกาล',
+        'นพ.พชร กวีวัฒนถาวร',
+        'พญ.ณิชกุล อุ่นทานนท์',
+        'พญ.กัลยกร ริ้วรุจา',
+        'พญ.ฉัทชนัน คงธนาคมธัญกิจ',
+        'พญ.ญาณิศา บุญย้อย',
+        'นพ.พิเชษฐ์ เมตตา',
+        'นพ.สิรวิชญ์ จินดาปทีป',
+        'พญ.สุภามาศ ศิริสัมปทา',
+        'พญ.อนัตตา งามเจตนรมย์',
+        'นพ.เศรษฐพงษ์ เตชะเลิศสุวรรณ',
+        'นพ.กรวิชญ์ เทอดกิติวรางค์',
+        'นพ.ก้องภพ ปนัดดาภรณ์',
+        'พญ.ฐิติวรดา ทวีวงษ์',
+        'นพ.ธนพล บุรณนานนท์',
+        'พญ.ชนิดาภา ฉายาชวลิต',
+        'พญ.ปพิชญา ธรรมสวยดี',
+        'นพ.พณิช พัฒนกำจรกิจ',
+        'พญ.พราวพลอย เจริญราช',
+        'พญ.พิชญานิน ตุนาค',
+        'พญ.พิมพ์พิสุทธิ์ ทองสิมา',
+        'พญ.ภัทรกันย์ จันททิมโอภาส',
+        'พญ.วริศรา ทรงเงินดี',
+        'พญ.นภัค เจริญใจ',
+        'พญ.มิณชิตา จุฑาธิปไตย',
+        'พญ.ปานสิริน ประกอบวณิชกุล',
+        'นพ.ปวีร์ อัศวกิตติพร',
+        'พญ.สายสวลี ยุคล',
+        'พญ.มินธิชา คุณพงอนันต์',
+        'พญ.จุฬาลักษณ์ พูนศิริ',
+        'นพ.ธนภัทร ไหลสกุล',
+        'นพ.ธนวรรษ์ สุขเจริญ',
+        'พญ.วัลดุ์วดี กมลวรกุล',
+        'พญ.วิรากร ชูศักดิ์',
+        'นพ.วิศวินทร์ หมวดมณี',
+        'พญ.สุธาทิพย์ สุขเสวี',
+        'พญ.หทัยชนก ชาไธสง',
+        'พญ.รสิตา งามเจริญรุจี',
+        'พญ.คณนา ภัทรกุลพงษ์',
+        'พญ.ชนมน นามแท้',
+        'พญ.ชญาณิศา อึงพินิจพงศ์',
+        'พญ.ธรานนท์ จักรธรานนท์',
+        'พญ.ญัฐณิชา เมรินทร์',
+        'นพ.ณัฐพชร พงศ์จิรภัทร',
+        'พญ.จิรญา ลีวงศ์วัฒน์',
+        'นพ.ชินดนัย ทองสวัสดิ์วงศ์',
+        'พญ.พิชญาวี บุราณเคน',
+        'นพ.ภูวิศ ตันติพูล',
+        'นพ.ศิรพงศ์ แววสีทอง',
+        'พญ.ชนัญชิดา สิริเลิศเมฆาสกุล',
+        'พญ.พัทธนันท์ เลขาลาวัณย์',
+        'พญ.เอมิกา ศรีมงคล',
+        'พญ.วิชชุกร ฐิติรุ่งเรือง',
+        'นพ.จิรกิตติ์ ตระกูลศักดิ์',
+        'พญ.จิรภัทร์ กังพานิชกุล',
+        'พญ.สุพิชชา คีรีวิเชียร',
+        'พญ.อัยรดา ประดับญาติ',
+        'นพ.กรมิษฐ์ นวเจริญวงศ์',
+        'นพ.ชญานิน วิทยพัฒนาพร',
+        'พญ.ธนพร หัตถาพงษ์',
+        'พญ.พรธีรา มณฑา',
+        'พญ.จัสมีน ซอหิรัญ',
+        'พญ.รตา พูลทวีเกียรติ์',
+        'นพ.ญานภัทร ขันตี',
+        'นพ.ทัตเทพ บุญบำรุง',
+        'นพ.ภูมิ เกียรติสมบัติ',
+        'พญ.ปอรรัชม์ คมวงศ์วิวัฒน์',
+        'นพ.กิตติภพ ภู่ธนะพิบูล',
+        'พญ.ณิชากร ชูช่วย',
+        'พญ.ณิชาภัทร ชูไสว',
+        'พญ.ทรายงาม ไชยบุญเรือง',
+        'พญ.ธิษตยา บุญรัตนกุล',
+        'พญ.นันทัชพร สิงห์โต',
+        'พญ.ศุภวดี ปิยวรเดช',
+        'นพ.เอกณัฐ ธาราสันติสุข',
+        'พญ.พันวรรษา รุจิรังสิมันตุ์กุล',
+        'พญ.พิณรสา สุวรรณกูฏ',
+        'นพ.กรวิทย์ หอพัตราภรณ์',
+        'พญ.ลัลลลิลล์ โสจิกุล',
+        'นพ.กณิศ เพชรมณีล้ำค่า',
+        'พญ.ปุณญรัสนิ์ โชติกิจไพศาล'
+    ];
+
+    public function getDoctorsList(): array {
+        return self::$realDoctors;
+    }
 
     public function __construct() {
         $this->driver  = AppConfig::get('HIS_DRIVER', 'himpro');
@@ -107,9 +223,9 @@ class PdhApiService {
             // 1. Sync Live IPD Admissions to patients_cache & visits_cache
             if (!empty($ipdRes['data']) && is_array($ipdRes['data'])) {
                 $stmtP = $pdo->prepare("
-                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, phone, weight, synced_at)
-                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :phone, :w, NOW())
-                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), phone = VALUES(phone), weight = VALUES(weight), synced_at = NOW()
+                    INSERT INTO patients_cache (hn, cid, prefix, first_name, last_name, fullname, gender, birthdate, age, phone, weight, synced_at)
+                    VALUES (:hn, :cid, :prefix, :fname, :lname, :fullname, :gender, :bdate, :age, :phone, :w, NOW())
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), gender = VALUES(gender), phone = VALUES(phone), weight = VALUES(weight), synced_at = NOW()
                 ");
                 $stmtV = $pdo->prepare("
                     INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
@@ -119,7 +235,28 @@ class PdhApiService {
 
                 foreach ($ipdRes['data'] as $p) {
                     if (empty($p['hn'])) continue;
-                    $gender = ($p['sex'] === 'SX2' || $p['sex'] === 'FEMALE') ? 'หญิง' : 'ชาย';
+                    $prefix   = $p['prefix'] ?? $p['pname'] ?? '';
+                    $fname    = $p['first_name'] ?? $p['fname'] ?? '';
+                    $lname    = $p['last_name'] ?? $p['lname'] ?? '';
+                    $fullname = $p['fullname'] ?? $p['patient_name'] ?? trim("{$prefix} {$fname} {$lname}");
+
+                    if (empty($fname) && !empty($fullname)) {
+                        $parts = preg_split('/\s+/', trim($fullname));
+                        if (count($parts) >= 3) {
+                            $prefix = $parts[0];
+                            $fname  = $parts[1];
+                            $lname  = implode(' ', array_slice($parts, 2));
+                        } elseif (count($parts) === 2) {
+                            $fname  = $parts[0];
+                            $lname  = $parts[1];
+                        } else {
+                            $fname  = $fullname;
+                        }
+                    }
+                    if (empty($fname)) $fname = 'ผู้ป่วยใน';
+                    if (empty($fullname)) $fullname = trim("{$prefix} {$fname} {$lname}");
+
+                    $gender = SanitizerHelper::normalizeGender($p['sex'] ?? $p['gender'] ?? '');
                     $bdate = $p['birth_date'] ?? null;
                     $age = 0;
                     if (!empty($bdate) && $bdate !== '0000-00-00') {
@@ -131,7 +268,10 @@ class PdhApiService {
                     $stmtP->execute([
                         'hn' => $p['hn'],
                         'cid' => $p['cid'] ?? null,
-                        'fullname' => $p['patient_name'] ?? 'ผู้ป่วยใน IPD',
+                        'prefix' => $prefix,
+                        'fname' => $fname,
+                        'lname' => $lname,
+                        'fullname' => $fullname,
                         'gender' => $gender,
                         'bdate' => $bdate,
                         'age' => $age,
@@ -154,9 +294,9 @@ class PdhApiService {
             // 2. Sync Live Chronic Patients to patients_cache & visits_cache
             if (!empty($chronicRes['data']) && is_array($chronicRes['data'])) {
                 $stmtP = $pdo->prepare("
-                    INSERT INTO patients_cache (hn, cid, fullname, gender, birthdate, age, phone, synced_at)
-                    VALUES (:hn, :cid, :fullname, :gender, :bdate, :age, :phone, NOW())
-                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), phone = VALUES(phone), synced_at = NOW()
+                    INSERT INTO patients_cache (hn, cid, prefix, first_name, last_name, fullname, gender, birthdate, age, phone, synced_at)
+                    VALUES (:hn, :cid, :prefix, :fname, :lname, :fullname, :gender, :bdate, :age, :phone, NOW())
+                    ON DUPLICATE KEY UPDATE fullname = VALUES(fullname), gender = VALUES(gender), phone = VALUES(phone), synced_at = NOW()
                 ");
                 $stmtV = $pdo->prepare("
                     INSERT INTO visits_cache (vn, hn, visit_date, visit_time, clinic, department, doctor, queue_number)
@@ -168,7 +308,28 @@ class PdhApiService {
                 foreach ($chronicRes['data'] as $c) {
                     $cIdx++;
                     $hn = $c['pid'] ?? $c['hn'] ?? ('HN' . str_pad($cIdx, 5, '0', STR_PAD_LEFT));
-                    $gender = ($c['sex'] === '2' || $c['sex'] === 'FEMALE') ? 'หญิง' : 'ชาย';
+                    $prefix   = $c['prefix'] ?? $c['pname'] ?? '';
+                    $fname    = $c['first_name'] ?? $c['fname'] ?? '';
+                    $lname    = $c['last_name'] ?? $c['lname'] ?? '';
+                    $fullname = $c['fullname'] ?? trim("{$prefix} {$fname} {$lname}");
+
+                    if (empty($fname) && !empty($fullname)) {
+                        $parts = preg_split('/\s+/', trim($fullname));
+                        if (count($parts) >= 3) {
+                            $prefix = $parts[0];
+                            $fname  = $parts[1];
+                            $lname  = implode(' ', array_slice($parts, 2));
+                        } elseif (count($parts) === 2) {
+                            $fname  = $parts[0];
+                            $lname  = $parts[1];
+                        } else {
+                            $fname  = $fullname;
+                        }
+                    }
+                    if (empty($fname)) $fname = 'ผู้ป่วย';
+                    if (empty($fullname)) $fullname = trim("{$prefix} {$fname} {$lname}");
+
+                    $gender = SanitizerHelper::normalizeGender($c['sex'] ?? $c['gender'] ?? '');
                     $bdate = $c['birth_date'] ?? null;
                     $age = 0;
                     if (!empty($bdate) && $bdate !== '0000-00-00') {
@@ -180,7 +341,10 @@ class PdhApiService {
                     $stmtP->execute([
                         'hn' => $hn,
                         'cid' => $c['cid'] ?? null,
-                        'fullname' => $c['fullname'] ?? ($c['first_name'] . ' ' . $c['last_name']),
+                        'prefix' => $prefix,
+                        'fname' => $fname,
+                        'lname' => $lname,
+                        'fullname' => $fullname,
                         'gender' => $gender,
                         'bdate' => $bdate,
                         'age' => $age,
@@ -191,13 +355,14 @@ class PdhApiService {
                         ? 'คลินิกเบาหวาน (NCD)' 
                         : 'คลินิกโรคเรื้อรัง (NCD)';
 
+                    $docName = self::$realDoctors[$cIdx % count(self::$realDoctors)];
                     $stmtV->execute([
                         'vn' => 'VN' . date('Ymd') . str_pad($cIdx, 3, '0', STR_PAD_LEFT),
                         'hn' => $hn,
                         'vdate' => $todayStr,
                         'vtime' => date('H:i:s', strtotime("08:00:00 +{$cIdx} minutes")),
                         'clinic' => $clinicName,
-                        'doc' => 'นพ.ทัตเทพ บุญบำรุง',
+                        'doc' => $docName,
                         'q' => 'Q' . str_pad($cIdx, 3, '0', STR_PAD_LEFT)
                     ]);
                 }
@@ -471,7 +636,7 @@ class PdhApiService {
                 'success' => true,
                 'source' => 'MOCK',
                 'data' => [
-                    ['appointment_date' => date('Y-m-d', strtotime('+14 days')), 'clinic' => 'คลินิกโภชนาการ', 'doctor' => 'นพ. สมชาย ใจดี', 'reason' => 'Follow-up NAF Assessment']
+                    ['appointment_date' => date('Y-m-d', strtotime('+14 days')), 'clinic' => 'คลินิกโภชนาการ', 'doctor' => 'นพ.วิสุทธิพงศ์ เศวตประสาธน์', 'reason' => 'Follow-up NAF Assessment']
                 ]
             ];
         }
@@ -627,7 +792,7 @@ class PdhApiService {
                     'fname'    => $fname,
                     'lname'    => $lname,
                     'fullname' => $fullname,
-                    'gender'   => strtoupper($payload['gender'] ?? 'MALE'),
+                    'gender'   => SanitizerHelper::normalizeGender($payload['gender'] ?? $payload['sex'] ?? ''),
                     'bdate'    => $payload['birthdate'] ?? null,
                     'age'      => (int)($payload['age'] ?? 0),
                     'phone'    => $phone,

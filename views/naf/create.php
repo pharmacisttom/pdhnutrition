@@ -342,7 +342,7 @@ use App\Helpers\SanitizerHelper;
 </div>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>
-<script src="<?= $baseUrl ?>/public/assets/js/naf-calculator.js"></script>
+<script src="<?= $assetUrl ?>/public/assets/js/naf-calculator.js"></script>
 <script>
 $('#nafForm').on('submit', function(e) {
   e.preventDefault();

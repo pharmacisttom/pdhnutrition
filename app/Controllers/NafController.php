@@ -182,7 +182,7 @@ class NafController {
                 'assessment_id' => $assessmentId,
                 'naf_grade' => $evaluation['naf_grade'],
                 'total_score' => $evaluation['total_score'],
-                'redirect' => ($_ENV['APP_URL'] ?? '/pdhnutrition') . '/naf/show/' . $assessmentId
+                'redirect' => \App\Config\AppConfig::routeBase() . '/naf/show/' . $assessmentId
             ]);
 
         } catch (Exception $e) {

@@ -13,7 +13,7 @@ class AuthMiddleware {
             if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 ResponseHelper::json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
             }
-            $baseUrl = $_ENV['APP_URL'] ?? '/pdhnutrition';
+            $baseUrl = \App\Config\AppConfig::routeBase();
             ResponseHelper::redirect($baseUrl . '/login');
         }
     }

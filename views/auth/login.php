@@ -1,6 +1,7 @@
 <?php
 use App\Config\AppConfig;
-$baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
+$baseUrl = AppConfig::routeBase();
+$assetUrl = AppConfig::get('APP_URL', '/pdhnutrition');
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -20,6 +21,7 @@ $baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 1rem;
     }
     .login-card {
       width: 100%;
@@ -27,13 +29,20 @@ $baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
+    @media (max-height: 700px) {
+      body { align-items: flex-start; }
+    }
+    @media (max-width: 575.98px) {
+      .login-card { padding: 1.25rem !important; }
+      .form-control { font-size: 1rem; min-height: 44px; }
+    }
   </style>
 </head>
 <body>
 
 <div class="card login-card bg-white p-4">
   <div class="text-center mb-4">
-    <img src="<?= $baseUrl ?>/public/assets/img/logo.png" alt="PDH Nutrition Logo" style="height: 90px; width: 90px; border-radius: 50%; object-fit: cover;" class="mb-3 shadow">
+    <img src="<?= $assetUrl ?>/public/assets/img/logo.png" alt="PDH Nutrition Logo" style="height: 90px; width: 90px; border-radius: 50%; object-fit: cover;" class="mb-3 shadow">
     <h4 class="fw-bold text-pdh-blue mb-1">PDH Nutrition System</h4>
     <p class="text-muted fs-6">ระบบบริหารจัดการภาวะโภชนาการผู้ป่วย โรงพยาบาลปลวกแดง</p>
   </div>
@@ -48,7 +57,7 @@ $baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
 
     <div class="mb-4">
       <label class="form-label fw-bold"><i class="fa-solid fa-key me-1"></i> รหัสผ่าน (Password)</label>
-      <input type="password" name="password" class="form-control form-control-lg" placeholder="ระบุรหัสผ่าน" required value="password123">
+      <input type="password" name="password" class="form-control form-control-lg" placeholder="ระบุรหัสผ่าน" required value="pdh10832">
     </div>
 
     <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold py-2 shadow-sm">
@@ -57,20 +66,20 @@ $baseUrl = AppConfig::get('APP_URL', '/pdhnutrition');
   </form>
 
   <div class="mt-4 pt-3 border-top text-center text-muted fs-7">
-    <div>บัญชีทดสอบ: admin, dietitian1, doctor1, nurse1</div>
-    <div>รหัสผ่าน: password123</div>
+    <div>บัญชีทดสอบ: admin (รหัสผ่าน: pdh10832)</div>
+    <div>บัญชีอื่น: dietitian1, doctor1, nurse1 (รหัสผ่าน: password123)</div>
+    <div class="mt-2 text-primary fw-semibold"><i class="fa-solid fa-code me-1"></i> พัฒนาโดย tomvis</div>
   </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
 <script>
-$('#loginForm').on('submit', function(e) {
-  e.preventDefault();
+function doLoginSubmit(targetUrl, formData) {
   $.ajax({
-    url: '<?= $baseUrl ?>/login/submit',
+    url: targetUrl,
     type: 'POST',
-    data: $(this).serialize(),
+    data: formData,
     dataType: 'json',
     success: function(res) {
       if (res.success) {
@@ -86,10 +95,20 @@ $('#loginForm').on('submit', function(e) {
       }
     },
     error: function(xhr) {
-      const err = xhr.responseJSON ? xhr.responseJSON.message : 'ไม่สามารถเข้าสู่ระบบได้';
-      Swal.fire('ข้อผิดพลาด', err, 'error');
+      if (xhr.status === 404 && targetUrl.indexOf('index.php') === -1) {
+        // Automatic fallback retry using index.php URL for Apache servers without mod_rewrite
+        doLoginSubmit('<?= $baseUrl ?>/index.php/login/submit', formData);
+      } else {
+        const err = xhr.responseJSON ? xhr.responseJSON.message : 'ไม่สามารถเข้าสู่ระบบได้';
+        Swal.fire('ข้อผิดพลาด', err, 'error');
+      }
     }
   });
+}
+
+$('#loginForm').on('submit', function(e) {
+  e.preventDefault();
+  doLoginSubmit('<?= $baseUrl ?>/login/submit', $(this).serialize());
 });
 </script>
 </body>

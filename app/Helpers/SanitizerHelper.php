@@ -13,11 +13,13 @@ class SanitizerHelper {
         if (strlen($cleaned) !== 13) {
             return htmlspecialchars($cid, ENT_QUOTES, 'UTF-8');
         }
-        // Format: 1-2345-XXXXX-XX-X
+        // Full formatted CID: 1-2345-67890-12-3 (Unmasked for clinical staff)
         $part1 = substr($cleaned, 0, 1);
         $part2 = substr($cleaned, 1, 4);
+        $part3 = substr($cleaned, 5, 5);
+        $part4 = substr($cleaned, 10, 2);
         $part5 = substr($cleaned, 12, 1);
-        return "{$part1}-{$part2}-XXXXX-XX-{$part5}";
+        return "{$part1}-{$part2}-{$part3}-{$part4}-{$part5}";
     }
 
     public static function cleanInput(array $data): array {
@@ -32,5 +34,25 @@ class SanitizerHelper {
             }
         }
         return $cleaned;
+    }
+
+    public static function normalizeGender(?string $rawGender): string {
+        if ($rawGender === null || $rawGender === '') return 'MALE';
+        $g = strtoupper(trim($rawGender));
+        if ($g === 'FEMALE' || $g === 'F' || $g === 'หญิง' || $g === '2' || $g === 'SX2') {
+            return 'FEMALE';
+        }
+        if ($g === 'OTHER' || $g === '3') {
+            return 'OTHER';
+        }
+        return 'MALE';
+    }
+
+    public static function formatGender(?string $gender): string {
+        if (empty($gender)) return '-';
+        $g = strtoupper(trim($gender));
+        if ($g === 'FEMALE' || $g === 'หญิง') return 'หญิง';
+        if ($g === 'OTHER') return 'อื่นๆ';
+        return 'ชาย';
     }
 }

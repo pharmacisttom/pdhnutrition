@@ -58,7 +58,7 @@ function testApi() {
   $('#jsonOutput').text('Loading API response...');
 
   $.ajax({
-    url: '<?= $baseUrl ?>/api/test-endpoint?endpoint=' + ep + '&param=' + param,
+    url: '<?= $baseUrl ?>/api/test-endpoint&endpoint=' + ep + '&param=' + param,
     type: 'GET',
     dataType: 'json',
     success: function(res) {

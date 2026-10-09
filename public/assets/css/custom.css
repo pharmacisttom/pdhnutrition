@@ -22,6 +22,63 @@ body {
   background-color: var(--pdh-gray);
   color: var(--pdh-dark);
   font-size: 0.95rem;
+  overflow-x: hidden;
+}
+
+/* Responsive Flex Wrapper */
+#wrapper {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+  min-width: 250px;
+  max-width: 250px;
+  min-height: 100vh;
+  transition: margin 0.25s ease-out;
+  flex-shrink: 0;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+  margin-left: -250px;
+}
+
+#page-content-wrapper {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  transition: all 0.25s ease-out;
+}
+
+/* Responsive Tables & Cards */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table.dataTable {
+  width: 100% !important;
+}
+
+/* Responsive Nav Pills & Tabs */
+.nav-pills {
+  flex-wrap: wrap !important;
+}
+
+.nav-pills .nav-link {
+  white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+  #sidebar-wrapper {
+    margin-left: -250px;
+  }
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: 0;
+  }
 }
 
 .bg-pdh-blue {
@@ -116,4 +173,111 @@ body {
 .table th {
   font-weight: 600;
   background-color: #f1f3f5;
+}
+
+/* Shared screen layout: preserve the separate printable forms. */
+@media screen {
+  .fs-7 { font-size: .85rem; }
+  #wrapper { flex-wrap: wrap; align-items: stretch; }
+  #page-content-wrapper { width: 0 !important; }
+  #wrapper > .footer { flex: 0 0 100%; }
+  #sidebar-wrapper { display: flex; flex-direction: column; }
+  #sidebar-wrapper .list-group { flex: 1; }
+  #sidebar-wrapper .list-group-item { line-height: 1.6; }
+  .hover-bg:hover, .hover-bg:focus-visible { background: rgba(255,255,255,.12) !important; }
+  .sidebar-close { display: none; }
+  .sidebar-backdrop[hidden] { display: none; }
+  .sidebar-backdrop {
+    position: fixed; inset: 0; z-index: 1035; border: 0;
+    background: rgba(12, 28, 45, .45);
+  }
+  #page-content-wrapper > .container-fluid > .d-flex.justify-content-between,
+  .patient-header-banner > .d-flex,
+  #page-content-wrapper .card-header.d-flex {
+    flex-wrap: wrap; gap: .75rem;
+  }
+  #page-content-wrapper .card,
+  #page-content-wrapper .row > *,
+  #page-content-wrapper .d-flex > div { min-width: 0; }
+  #page-content-wrapper h3 { line-height: 1.45; overflow-wrap: anywhere; }
+  .patient-header-banner { overflow-wrap: anywhere; }
+  #page-content-wrapper .btn { white-space: normal; }
+  .table-responsive { overscroll-behavior-x: contain; }
+  .table-responsive > table { min-width: 640px; }
+  .dataTables_wrapper .pagination { flex-wrap: wrap; gap: .2rem; }
+  .dataTables_wrapper .dataTables_filter input { max-width: 100%; }
+  .nav-tabs { flex-wrap: wrap; gap: .25rem; }
+  .nav-tabs .nav-link { white-space: normal; }
+  :is(a, button, input, select, textarea):focus-visible {
+    outline: 3px solid #2185d0; outline-offset: 3px;
+  }
+}
+
+@media screen and (max-width: 1199.98px) and (min-width: 768px) {
+  #page-content-wrapper > .container-fluid > .row > .col-md-3 {
+    width: 50%;
+  }
+}
+
+@media screen and (max-width: 991.98px) {
+  #sidebar-wrapper {
+    position: fixed; inset: 0 auto 0 0; z-index: 1040;
+    height: 100vh; height: 100dvh; min-height: 0;
+    width: 250px; max-width: calc(100vw - 48px);
+    margin-left: 0; transform: translateX(-100%);
+    overflow-y: auto; visibility: hidden;
+    transition: transform .25s ease-out, visibility .25s;
+  }
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: 0; transform: translateX(0); visibility: visible;
+  }
+  .sidebar-close {
+    display: block; align-self: flex-end; margin: .5rem .5rem 0;
+    min-width: 44px; min-height: 44px;
+  }
+  body.sidebar-open { overflow: hidden; }
+  #page-content-wrapper { flex-basis: 100%; }
+  #page-content-wrapper > .navbar > .container-fluid {
+    gap: .75rem; padding: 0; align-items: flex-start;
+  }
+  #page-content-wrapper .navbar .navbar-brand {
+    font-size: 1rem !important; white-space: normal; margin-right: 0;
+  }
+  #page-content-wrapper .navbar .ms-auto {
+    flex-wrap: wrap; gap: .5rem; justify-content: flex-end;
+  }
+  #page-content-wrapper .navbar .badge.me-3 { margin-right: 0 !important; }
+  #page-content-wrapper .navbar .dropdown { max-width: 100%; }
+  #page-content-wrapper .navbar .dropdown-toggle {
+    max-width: 100%; white-space: normal; overflow-wrap: anywhere;
+  }
+  .sticky-naf-panel { position: static; }
+}
+
+@media screen and (max-width: 575.98px) {
+  #page-content-wrapper > .container-fluid.p-4 { padding: 1rem !important; }
+  #page-content-wrapper .navbar { padding: .75rem !important; }
+  #page-content-wrapper .navbar .ms-auto { width: 100%; }
+  #page-content-wrapper h3 { font-size: 1.3rem; }
+  #page-content-wrapper .card.p-4 { padding: 1rem !important; }
+  .patient-header-banner { padding: 1rem; }
+  #page-content-wrapper > .container-fluid > .d-flex.justify-content-between {
+    align-items: flex-start !important;
+  }
+  #page-content-wrapper > .container-fluid > .d-flex.justify-content-between > .btn {
+    width: 100%;
+  }
+  #page-content-wrapper .form-control,
+  #page-content-wrapper .form-select { font-size: 1rem; min-height: 44px; }
+  #page-content-wrapper .btn { min-height: 44px; }
+  #page-content-wrapper .form-check { padding-top: .35rem; padding-bottom: .35rem; }
+  .dataTables_wrapper .dataTables_filter label {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+  }
+  .dataTables_wrapper .dataTables_filter input { width: 100%; margin-left: 0 !important; }
+  .footer { padding-inline: 1rem; line-height: 1.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #sidebar-wrapper, #page-content-wrapper { transition: none !important; }
 }

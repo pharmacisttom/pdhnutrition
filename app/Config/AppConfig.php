@@ -4,6 +4,13 @@ namespace App\Config;
 class AppConfig {
     private static array $config = [];
 
+    public static function routeBase(): string {
+        // Query routes work even when Apache rewrite and PATH_INFO are disabled.
+        $base = (string) self::get('APP_URL', '/pdhnutrition');
+        $path = parse_url($base, PHP_URL_PATH) ?: '';
+        return rtrim($path, '/') . '/index.php?route=';
+    }
+
     public static function load(): void {
         $envFile = __DIR__ . '/../../.env';
         if (file_exists($envFile)) {
@@ -25,6 +32,19 @@ class AppConfig {
         if (empty(self::$config)) {
             self::load();
         }
+
+        // Dynamically resolve APP_URL matching defined constant or request host
+        if ($key === 'APP_URL') {
+            if (defined('APP_URL')) {
+                return APP_URL;
+            }
+            if (!empty($_SERVER['HTTP_HOST'])) {
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                return $scheme . '://' . $_SERVER['HTTP_HOST'] . '/pdhnutrition';
+            }
+            return '/pdhnutrition';
+        }
+
         return $_ENV[$key] ?? self::$config[$key] ?? $default;
     }
 }

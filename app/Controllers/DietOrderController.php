@@ -154,7 +154,7 @@ class DietOrderController {
                 'success' => true,
                 'message' => 'บันทึก Diet Order สำเร็จ',
                 'diet_order_id' => $dietOrderId,
-                'redirect' => ($_ENV['APP_URL'] ?? '/pdhnutrition') . '/diet/print/' . $dietOrderId
+                'redirect' => \App\Config\AppConfig::routeBase() . '/diet/print/' . $dietOrderId
             ]);
 
         } catch (Exception $e) {

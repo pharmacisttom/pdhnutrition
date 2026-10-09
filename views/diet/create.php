@@ -224,7 +224,7 @@ use App\Helpers\SanitizerHelper;
 </div>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>
-<script src="<?= $baseUrl ?>/public/assets/js/diet-calculator.js"></script>
+<script src="<?= $assetUrl ?>/public/assets/js/diet-calculator.js"></script>
 <script>
 $('#dietForm').on('submit', function(e) {
   e.preventDefault();

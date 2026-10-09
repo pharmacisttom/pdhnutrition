@@ -29,6 +29,7 @@ use App\Helpers\DateHelper;
     <!-- Main Advanced Multi-Criteria Filter Panel -->
     <div class="card p-4 shadow-sm border-0 mb-4 bg-white border-start border-primary border-4">
       <form method="GET" action="<?= $baseUrl ?>/patients/search" id="advancedSearchForm">
+        <input type="hidden" name="route" value="/patients/search">
         <div class="row g-3">
           
           <!-- Keyword Input -->
@@ -85,19 +86,19 @@ use App\Helpers\DateHelper;
       <!-- Quick Preset Filter Buttons -->
       <div class="d-flex flex-wrap gap-2 mt-3 pt-3 border-top align-items-center">
         <small class="text-muted fw-bold me-2">ตัวกรองทางคลินิกรวดเร็ว (Quick Presets):</small>
-        <a href="<?= $baseUrl ?>/patients/search?type=IPD" class="btn btn-sm btn-outline-info rounded-pill <?= ($typeFilter==='IPD')?'active':'' ?>">
+        <a href="<?= $baseUrl ?>/patients/search&type=IPD" class="btn btn-sm btn-outline-info rounded-pill <?= ($typeFilter==='IPD')?'active':'' ?>">
           <i class="fa-solid fa-bed me-1"></i> ผู้ป่วยใน IPD
         </a>
-        <a href="<?= $baseUrl ?>/patients/search?naf=NAF+C" class="btn btn-sm btn-outline-danger rounded-pill <?= ($nafFilter==='NAF C')?'active':'' ?>">
+        <a href="<?= $baseUrl ?>/patients/search&naf=NAF+C" class="btn btn-sm btn-outline-danger rounded-pill <?= ($nafFilter==='NAF C')?'active':'' ?>">
           <i class="fa-solid fa-triangle-exclamation me-1"></i> NAF C (เสี่ยงสูงรุนแรง)
         </a>
-        <a href="<?= $baseUrl ?>/patients/search?type=REGISTRY" class="btn btn-sm btn-outline-warning text-dark rounded-pill <?= ($typeFilter==='REGISTRY')?'active':'' ?>">
+        <a href="<?= $baseUrl ?>/patients/search&type=REGISTRY" class="btn btn-sm btn-outline-warning text-dark rounded-pill <?= ($typeFilter==='REGISTRY')?'active':'' ?>">
           <i class="fa-solid fa-clipboard-check me-1"></i> อยู่ใน Nutrition Registry
         </a>
-        <a href="<?= $baseUrl ?>/patients/search?lab=LOW_BMI" class="btn btn-sm btn-outline-secondary rounded-pill <?= ($labFilter==='LOW_BMI')?'active':'' ?>">
+        <a href="<?= $baseUrl ?>/patients/search&lab=LOW_BMI" class="btn btn-sm btn-outline-secondary rounded-pill <?= ($labFilter==='LOW_BMI')?'active':'' ?>">
           <i class="fa-solid fa-weight-scale me-1"></i> BMI &lt; 18.5 kg/m²
         </a>
-        <a href="<?= $baseUrl ?>/patients/search?q=" class="btn btn-sm btn-link text-decoration-none text-muted">
+        <a href="<?= $baseUrl ?>/patients/search&q=" class="btn btn-sm btn-link text-decoration-none text-muted">
           <i class="fa-solid fa-rotate-left me-1"></i> ล้างตัวกรอง
         </a>
       </div>
@@ -214,17 +215,17 @@ use App\Helpers\DateHelper;
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
                           <li>
-                            <a class="dropdown-menu-item text-success fw-bold p-2 text-decoration-none d-block" href="<?= $baseUrl ?>/naf/create?hn=<?= $p['hn'] ?>">
+                            <a class="dropdown-menu-item text-success fw-bold p-2 text-decoration-none d-block" href="<?= $baseUrl ?>/naf/create&hn=<?= $p['hn'] ?>">
                               <i class="fa-solid fa-clipboard-check me-2"></i> ประเมิน NAF ใหม่
                             </a>
                           </li>
                           <li>
-                            <a class="dropdown-menu-item text-primary fw-bold p-2 text-decoration-none d-block" href="<?= $baseUrl ?>/diet/create?hn=<?= $p['hn'] ?>">
+                            <a class="dropdown-menu-item text-primary fw-bold p-2 text-decoration-none d-block" href="<?= $baseUrl ?>/diet/create&hn=<?= $p['hn'] ?>">
                               <i class="fa-solid fa-utensils me-2"></i> สั่ง Diet Order
                             </a>
                           </li>
                           <li>
-                            <a class="dropdown-menu-item text-info fw-bold p-2 text-decoration-none d-block" href="<?= $baseUrl ?>/notes/create?hn=<?= $p['hn'] ?>">
+                            <a class="dropdown-menu-item text-info fw-bold p-2 text-decoration-none d-block" href="<?= $baseUrl ?>/notes/create&hn=<?= $p['hn'] ?>">
                               <i class="fa-solid fa-notes-medical me-2"></i> เขียน SOAP Note
                             </a>
                           </li>

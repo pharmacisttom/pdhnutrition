@@ -15,7 +15,7 @@ foreach ($answers as $a) {
   <title>Nutrition Alert Form (NAF) - โรงพยาบาลปลวกแดง</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="<?= $baseUrl ?>/public/assets/css/print.css" rel="stylesheet">
+  <link href="<?= $assetUrl ?>/public/assets/css/print.css" rel="stylesheet">
   <style>
     body { font-family: 'Sarabun', sans-serif; font-size: 10pt; color: #000; background: #fff; }
     .naf-header { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px; }
@@ -44,7 +44,7 @@ foreach ($answers as $a) {
   <button onclick="window.print()" class="btn btn-primary btn-lg fw-bold">
     <i class="fa-solid fa-print"></i> พิมพ์แบบประเมิน NAF (Print Form)
   </button>
-  <a href="<?= $baseUrl ?>/naf/<?= $assessment['id'] ?>" class="btn btn-outline-secondary btn-lg ms-2">
+  <a href="<?= $baseUrl ?>/naf/show/<?= $assessment['id'] ?>" class="btn btn-outline-secondary btn-lg ms-2">
     ย้อนกลับ (Back)
   </a>
 </div>
@@ -54,7 +54,7 @@ foreach ($answers as $a) {
   <!-- HEADER -->
   <div class="d-flex justify-content-between align-items-center naf-header">
     <div class="d-flex align-items-center">
-      <img src="<?= $baseUrl ?>/public/assets/img/logo.png" alt="PDH Logo" style="height: 45px;" class="me-2" onerror="this.style.display='none'">
+      <img src="<?= $assetUrl ?>/public/assets/img/logo.png" alt="PDH Logo" style="height: 45px;" class="me-2" onerror="this.style.display='none'">
       <div>
         <h4 class="fw-bold m-0" style="font-size: 15pt;">NUTRITION ALERT FORM แบบประเมินภาวะโภชนาการ</h4>
         <small class="text-muted">โรงพยาบาลปลวกแดง Pluakdaeng Hospital Clinical Nutrition</small>

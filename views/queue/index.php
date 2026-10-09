@@ -29,6 +29,7 @@ use App\Helpers\DateHelper;
     <!-- Filter Bar -->
     <div class="card p-3 mb-4 bg-white shadow-sm border-0">
       <form method="GET" action="<?= $baseUrl ?>/nutrition-queue" class="row g-3">
+        <input type="hidden" name="route" value="/nutrition-queue">
         <div class="col-md-4">
           <label class="form-label fw-bold">กรองตามสถานะ</label>
           <select name="status" class="form-select" onchange="this.form.submit()">
@@ -127,15 +128,15 @@ use App\Helpers\DateHelper;
                           </button>
                         <?php endif; ?>
 
-                        <a href="<?= $baseUrl ?>/naf/create?hn=<?= $t['hn'] ?>&vn=<?= $t['vn'] ?>" class="btn btn-sm btn-outline-success">
+                        <a href="<?= $baseUrl ?>/naf/create&hn=<?= $t['hn'] ?>&vn=<?= $t['vn'] ?>" class="btn btn-sm btn-outline-success">
                           <i class="fa-solid fa-clipboard-check me-1"></i> NAF
                         </a>
 
-                        <a href="<?= $baseUrl ?>/diet/create?hn=<?= $t['hn'] ?>&vn=<?= $t['vn'] ?>" class="btn btn-sm btn-outline-primary">
+                        <a href="<?= $baseUrl ?>/diet/create&hn=<?= $t['hn'] ?>&vn=<?= $t['vn'] ?>" class="btn btn-sm btn-outline-primary">
                           <i class="fa-solid fa-utensils me-1"></i> Diet Order
                         </a>
 
-                        <a href="<?= $baseUrl ?>/notes/create?hn=<?= $t['hn'] ?>&vn=<?= $t['vn'] ?>" class="btn btn-sm btn-outline-info">
+                        <a href="<?= $baseUrl ?>/notes/create&hn=<?= $t['hn'] ?>&vn=<?= $t['vn'] ?>" class="btn btn-sm btn-outline-info">
                           <i class="fa-solid fa-file-pen me-1"></i> SOAP
                         </a>
 
